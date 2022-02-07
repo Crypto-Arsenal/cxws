@@ -54,6 +54,7 @@ export class SmartWss extends EventEmitter {
      * when the socket is connected.
      */
     public send(data: string) {
+        console.log("smart wss", data, this._connected);
         if (this._connected) {
             try {
                 this._wss.send(data);
@@ -79,9 +80,13 @@ export class SmartWss extends EventEmitter {
             this._wss.on("open", () => {
                 this._connected = true;
                 this.emit("open"); // deprecated
+                console.log("smartwss", "open");
                 this.emit("connected");
                 resolve();
             });
+            this._wss.on("connection", () => console.log("smartwss handshake"));
+            this._wss.on("upgrade", () => console.log("smartwss upgrade"));
+
             this._wss.on("close", () => this._closeCallback());
             this._wss.on("error", err => this.emit("error", err));
             this._wss.on("message", msg => this.emit("message", msg));
@@ -92,6 +97,7 @@ export class SmartWss extends EventEmitter {
      * Handles the closing event by reconnecting
      */
     private _closeCallback(): void {
+        console.log("smartwss, _closeCallback");
         this._connected = false;
         this._wss = null;
         this.emit("disconnected");
@@ -105,6 +111,8 @@ export class SmartWss extends EventEmitter {
     private async _retryConnect(): Promise<void> {
         // eslint-disable-next-line no-constant-condition
         while (true) {
+            console.log("smartwss, _retryConnect");
+
             try {
                 await wait(this._retryTimeoutMs);
                 await this._attemptConnect();
