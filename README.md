@@ -486,3 +486,7 @@ client._requestLevel2Snapshot = market =>
 ```
 
 Otherwise you should be prepared to manually verify the `sequenceId` if possible, and request the snapshot again if there is a gap between the snapshot and the first update by calling `client.requestLevel2Snapshot(market)` again.
+
+### Credits
+
+https://github.com/altangent/ccxws
