@@ -527,7 +527,7 @@ Refer to: [poloniex](/src/exchanges/poloniex-client.js), [liquid](/src/exchanges
 
 ### Numerics vs Strings
 
-CCXWS returns all numeric types as strings, with the exception of the unix timestamp. For reference, refer to the API documentation for [Ticker](https://github.com/altangent/ccxws#ticker), [Trade](https://github.com/altangent/ccxws#ticker), [Level2Point](https://github.com/altangent/ccxws#level2point), and [Level3Point](https://github.com/altangent/ccxws#level3point).
+CCXWS returns all numeric types as strings, with the exception of the unix timestamp. For reference, refer to the API documentation for [Ticker](https://github.com/altangent/ccxtws#ticker), [Trade](https://github.com/altangent/ccxtws#ticker), [Level2Point](https://github.com/altangent/ccxtws#level2point), and [Level3Point](https://github.com/altangent/ccxtws#level3point).
 
 Numeric values are returned as strings to prevent data loss. JavaScript Numeric type is stored as an IEEE 754 floating point value. The maximum number of signicant digits is 15, meaning that large integers and floating point values will result in precision loss.
 
@@ -562,12 +562,12 @@ It is often useful to create a `test.js` file (which is excluded from git) in th
 code. For example:
 
 ```javascript
-let ccxws = require("./src");
+let ccxtws = require("./src");
 
 // HitBTC
 let market1 = { id: "BTCUSD", base: "BTC", quote: "USDT" };
 let market2 = { id: "ETHBTC", base: "ETH", quote: "BTC" };
-let client = new ccxws.hitbtc();
+let client = new ccxtws.hitbtc();
 
 //////////////////////////////////
 

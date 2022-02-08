@@ -1,6 +1,6 @@
 {
-  "name": "ccxws",
-  "version": "0.47.0",
+  "name": "cxws",
+  "version": "0.0.1",
   "description": "Websocket client for 37 cryptocurrency exchanges",
   "keywords": [
     "bitmex",
@@ -11,7 +11,7 @@
     "websocket",
     "realtime"
   ],
-  "author": "Brian Mancini <bmancini@gmail.com>",
+  "author": "Alan Wu <alanwu4321@gmail.com>",
   "license": "MIT",
   "main": "dist/src/index.js",
   "scripts": {
@@ -22,7 +22,7 @@
     "lint": "eslint src __tests__",
     "test": "nyc --reporter=lcov --reporter=text --extension=.ts mocha --require ts-node/register --recursive \"__tests__/**/*.spec.ts\""
   },
-  "repository": "altangent/ccxws",
+  "repository": "alanwu4321/cxws",
   "dependencies": {
     "axios": "^0.25.0",
     "ccxt": "^1.72.37",

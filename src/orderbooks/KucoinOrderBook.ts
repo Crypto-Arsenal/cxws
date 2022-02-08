@@ -14,14 +14,14 @@ import { L3Point } from "./L3Point";
  *
  * # Example
  * ```javascript
- * const ccxws = require("ccxws");
- * const KucoinOrderBook = require("ccxws/src/orderbooks/KucoinOrderBook");
+ * const ccxtws = require("ccxtws");
+ * const KucoinOrderBook = require("ccxtws/src/orderbooks/KucoinOrderBook");
  *
  * let market = { id: "BTC-USDT", base: "BTC", quote: "USDT" };
  * let updates = [];
  * let ob;
  *
- * const client = new ccxws.Kucoin();
+ * const client = new ccxtws.Kucoin();
  * client.subscribeLevel3Updates(market);
  * client.on("l3snapshot", snapshot => {
  *   ob = new KucoinOrderBook(snapshot, updates);

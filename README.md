@@ -1,7 +1,7 @@
 # CryptoCurrency eXchange WebSockets
 
-[![CI](https://github.com/altangent/ccxws/workflows/Node.js%20CI/badge.svg)](https://github.com/altangent/ccxws/actions?query=workflow%3A%22Node.js+CI%22)
-[![Coverage](https://coveralls.io/repos/github/altangent/ccxws/badge.svg?branch=master)](https://coveralls.io/github/altangent/ccxws?branch=master)
+[![CI](https://github.com/altangent/ccxtws/workflows/Node.js%20CI/badge.svg)](https://github.com/altangent/ccxtws/actions?query=workflow%3A%22Node.js+CI%22)
+[![Coverage](https://coveralls.io/repos/github/altangent/ccxtws/badge.svg?branch=master)](https://coveralls.io/github/altangent/ccxtws?branch=master)
 
 A JavaScript library for connecting to realtime public APIs on all cryptocurrency exchanges.
 
@@ -17,16 +17,16 @@ Check out the [CONTRIBUTING guide](/CONTRIBUTING.md) for how to get involved.
 
 ## Getting Started
 
-Install ccxws
+Install ccxtws
 
 ```bash
-npm install ccxws
+npm install ccxtws
 ```
 
 Create a new client for an exchange. Subscribe to the events that you want to listen to by supplying a market.
 
 ```javascript
-import { BinanceClient } from "ccxws";
+import { BinanceClient } from "ccxtws";
 const binance = new BinanceClient();
 
 // market could be from CCXT or genearted by the user
@@ -120,8 +120,8 @@ These properties are required by CCXWS.
 A websocket client that connects to a specific exchange. There is an implementation of this class for each exchange that governs the specific rules for managing the realtime connections to the exchange. You must instantiate the specific exchanges client to conncet to the exchange.
 
 ```javascript
-const binance = new ccxws.Binance();
-const coinbase = new ccxws.CoinbasePro();
+const binance = new ccxtws.Binance();
+const coinbase = new ccxtws.CoinbasePro();
 ```
 
 Clients can be instantiated with an options object that has several properties properties:
@@ -489,4 +489,4 @@ Otherwise you should be prepared to manually verify the `sequenceId` if possible
 
 ### Credits
 
-https://github.com/altangent/ccxws
+https://github.com/altangent/ccxtws

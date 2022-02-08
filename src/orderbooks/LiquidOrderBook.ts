@@ -15,7 +15,7 @@ import { L2Point } from "./L2Point";
  * # Example
  *
  * ```javascript
- * const client = new ccxws.liquid();
+ * const client = new ccxtws.liquid();
  * const market = { id: "btceur", base: "BTC", quote: "EUR" };
  * const ob = new LiquidOrderBook();
  *

@@ -12,4 +12,4 @@ Provide the URL for the documentation of the exchange's realtime API
 
 ---
 
-Refer to [Contributing Guide](https://github.com/altangent/ccxws/blob/master/CONTRIBUTING.md) for additional information.
+Refer to [Contributing Guide](https://github.com/altangent/ccxtws/blob/master/CONTRIBUTING.md) for additional information.

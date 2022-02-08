@@ -297,7 +297,7 @@ export class BitmexClient extends BasicClient {
         }
 
         // asks arrive in descending order (best ask last)
-        // ccxws standardizes so that best bid/ask are array index 0
+        // ccxtws standardizes so that best bid/ask are array index 0
         asks = asks.reverse();
 
         return new Level2Snapshot({
@@ -415,7 +415,7 @@ export class BitmexClient extends BasicClient {
         }
 
         // asks arrive in descending order (best ask last)
-        // ccxws standardizes so that best bid/ask are array index 0
+        // ccxtws standardizes so that best bid/ask are array index 0
         asks = asks.reverse();
 
         return new Level2Update({
