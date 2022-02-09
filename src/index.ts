@@ -50,6 +50,7 @@ import { KucoinClient } from "./exchanges/KucoinClient";
 import { LedgerXClient } from "./exchanges/LedgerXClient";
 import { LiquidClient } from "./exchanges/LiquidClient";
 import { OkexClient } from "./exchanges/OkexClient";
+import { OkexPrivateClient } from "./exchanges/OkexPrivateClient";
 import { PoloniexClient } from "./exchanges/PoloniexClient";
 import { UpbitClient } from "./exchanges/UpbitClient";
 import { ZbClient } from "./exchanges/ZbClient";
@@ -111,6 +112,7 @@ export {
     LedgerXClient,
     LiquidClient,
     OkexClient,
+    OkexPrivateClient,
     PoloniexClient,
     UpbitClient,
     ZbClient,

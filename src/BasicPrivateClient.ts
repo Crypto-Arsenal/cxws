@@ -24,6 +24,10 @@ export type SendFn = (remoteId: string, channle_sub: PrivateChannelSubscription)
 export abstract class BasicPrivateClient extends EventEmitter implements IPrivateClient {
     public hasPrivateOrders: boolean;
 
+    protected apiKey: string;
+    protected apiSecret: string;
+    protected apiPassword: string;
+
     protected _wssFactory: WssFactoryFn;
     protected _privateOrderSubs: PrivateChannelSubscriptionMap;
 

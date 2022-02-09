@@ -1,6 +1,6 @@
 import { createHmac } from "crypto";
 
-function base64Encode(value: Buffer | string | any): string {
+export function base64Encode(value: Buffer | string | any): string {
     let buffer: Buffer;
     if (Buffer.isBuffer(value)) {
         buffer = value;
@@ -16,7 +16,7 @@ function base64UrlEncode(value: Buffer | string | any): string {
     return base64Encode(value).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }
 
-function hmacSign(algorithm: string, secret: string, data: string): Buffer {
+export function hmacSign(algorithm: string, secret: string, data: string): Buffer {
     const hmac = createHmac(algorithm, secret);
     hmac.update(data);
     return hmac.digest();

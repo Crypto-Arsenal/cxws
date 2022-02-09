@@ -4,28 +4,17 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import Decimal from "decimal.js";
 import {
     BasicPrivateClient,
     PrivateChannelSubscription,
     PrivateChannelSubscriptionMap,
 } from "../BasicPrivateClient";
-import { Candle } from "../Candle";
-import { CandlePeriod } from "../CandlePeriod";
-import { ClientOptions } from "../ClientOptions";
 import * as https from "../Https";
-import { Level2Point } from "../Level2Point";
-import { Level2Snapshot } from "../Level2Snapshots";
-import { Level2Update } from "../Level2Update";
-import { NotImplementedFn } from "../NotImplementedFn";
-import { Ticker } from "../Ticker";
-import { Trade } from "../Trade";
 import ccxt from "ccxt";
+import { PrivateClientOptions } from "../PrivateClientOptions";
 
-export type KrakenClientOptions = ClientOptions & {
+export type KrakenClientOptions = PrivateClientOptions & {
     autoloadSymbolMaps?: boolean;
-    apiKey?: string;
-    apiSecret?: string;
 };
 
 /**
@@ -50,8 +39,6 @@ export type KrakenClientOptions = ClientOptions & {
   */
 export class KrakenPrivateClient extends BasicPrivateClient {
     public apiToken: string;
-    public apiSecret: string;
-    public apiKey: string;
     public ccxt: ccxt.kraken;
 
     public debounceWait: number;
@@ -99,14 +86,13 @@ export class KrakenPrivateClient extends BasicPrivateClient {
     }
 
     protected _sendUnsubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription) {
-        throw new Error("Method not implemented.");
+        console.log("kraken _sendUnsubPrivateOrders");
+        this._debounceSend("openOrders", this._privateOrderSubs, false, {
+            name: "openOrders",
+            token: this.apiToken,
+        });
     }
 
-    /**
-     * [
-[{"OQNU73-ZPVWZ-EICDW2":{"avg_price":"0.00000000","cost":"0.00000000","descr":{"close":null,"leverage":null,"order":"buy 2.50000000 ADA/USDT @ limit 1.12376000","ordertype":"limit","pair":"ADA/USDT","price":"1.12376000","price2":"0.00000000","type":"buy"},"expiretm":null,"fee":"0.00000000","limitprice":"0.00000000","misc":"","oflags":"fciq","opentm":"1644133459.730105","refid":null,"starttm":null,"status":"open","stopprice":"0.00000000","timeinforce":"GTC","userref":0,"vol":"2.50000000","vol_exec":"0.00000000"}},{"OXAWVP-WCYMK-7JF27K":{"avg_price":"0.00000","cost":"0.00000","descr":{"close":null,"leverage":null,"order":"buy 0.00100000 XBT/USDT @ limit 1.00000","ordertype":"limit","pair":"XBT/USDT","price":"1.00000","price2":"0.00000","type":"buy"},"expiretm":null,"fee":"0.00000","limitprice":"0.00000","misc":"","oflags":"fciq","opentm":"1644133366.808059","refid":null,"starttm":null,"status":"open","stopprice":"0.00000","timeinforce":"GTC","userref":0,"vol":"0.00100000","vol_exec":"0.00000000"}}] openOrders
-[{"OXAWVP-WCYMK-7JF27K":{"lastupdated":"1644134121.715066","status":"canceled","vol_exec":"0.00000000","cost":"0.00000","fee":"0.00000","avg_price":"0.00000","userref":0,"cancel_reason":"User requested"}}] openOrders
-     */
     protected _sendSubPrivateOrders() {
         console.log("kraken _sendSubPrivateOrders");
         this._debounceSend("openOrders", this._privateOrderSubs, true, {
@@ -255,17 +241,16 @@ export class KrakenPrivateClient extends BasicPrivateClient {
                 status: 'subscribed',
                 subscription: { maxratecount: 60, name: 'openOrders' }
             }
-                {
-                channelID: '15',
-                event: 'subscriptionStatus',
-                pair: 'XBT/EUR',
-                status: 'subscribed',
-                subscription: { name: 'ticker' }
-                }
             */
             this.subscriptionLog.set(parseInt(msg.channelID), msg);
             return;
         }
+
+        /**
+     * [
+[{"OQNU73-ZPVWZ-EICDW2":{"avg_price":"0.00000000","cost":"0.00000000","descr":{"close":null,"leverage":null,"order":"buy 2.50000000 ADA/USDT @ limit 1.12376000","ordertype":"limit","pair":"ADA/USDT","price":"1.12376000","price2":"0.00000000","type":"buy"},"expiretm":null,"fee":"0.00000000","limitprice":"0.00000000","misc":"","oflags":"fciq","opentm":"1644133459.730105","refid":null,"starttm":null,"status":"open","stopprice":"0.00000000","timeinforce":"GTC","userref":0,"vol":"2.50000000","vol_exec":"0.00000000"}},{"OXAWVP-WCYMK-7JF27K":{"avg_price":"0.00000","cost":"0.00000","descr":{"close":null,"leverage":null,"order":"buy 0.00100000 XBT/USDT @ limit 1.00000","ordertype":"limit","pair":"XBT/USDT","price":"1.00000","price2":"0.00000","type":"buy"},"expiretm":null,"fee":"0.00000","limitprice":"0.00000","misc":"","oflags":"fciq","opentm":"1644133366.808059","refid":null,"starttm":null,"status":"open","stopprice":"0.00000","timeinforce":"GTC","userref":0,"vol":"0.00100000","vol_exec":"0.00000000"}}] openOrders
+[{"OXAWVP-WCYMK-7JF27K":{"lastupdated":"1644134121.715066","status":"canceled","vol_exec":"0.00000000","cost":"0.00000","fee":"0.00000","avg_price":"0.00000","userref":0,"cancel_reason":"User requested"}}] openOrders
+     */
 
         // All messages from this point forward should arrive as an array
         if (!Array.isArray(msg)) {
