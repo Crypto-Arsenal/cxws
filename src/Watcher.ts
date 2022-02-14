@@ -62,6 +62,7 @@ export class Watcher {
      * Logic to perform a reconnection event of the client
      */
     private _reconnect() {
+        console.log("watcher reconnect");
         this.client.reconnect();
         this.stop();
     }

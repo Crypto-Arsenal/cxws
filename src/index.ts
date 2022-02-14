@@ -29,6 +29,7 @@ import { BitmexClient } from "./exchanges/BitmexClient";
 import { BitstampClient } from "./exchanges/BitstampClient";
 import { BittrexClient } from "./exchanges/BittrexClient";
 import { CexClient } from "./exchanges/CexClient";
+import { CryptoComPrivateClient } from "./exchanges/CryptoComPrivateClient";
 import { CoinbaseProClient } from "./exchanges/CoinbaseProClient";
 import { CoinexClient } from "./exchanges/CoinexClient";
 import { DeribitClient } from "./exchanges/DeribitClient";
@@ -40,6 +41,7 @@ import { GateioClient } from "./exchanges/GateioClient";
 import { GeminiClient } from "./exchanges/Geminiclient";
 import { HitBtcClient } from "./exchanges/HitBtcClient";
 import { HuobiClient } from "./exchanges/HuobiClient";
+import { HuobiPrivateClient } from "./exchanges/HuobiPrivateClient";
 import { HuobiFuturesClient } from "./exchanges/HuobiFuturesClient";
 import { HuobiJapanClient } from "./exchanges/HuobiJapanClient";
 import { HuobiKoreaClient } from "./exchanges/HuobiKoreaClient";
@@ -91,6 +93,7 @@ export {
     BitstampClient,
     BittrexClient,
     CexClient,
+    CryptoComPrivateClient,
     CoinbaseProClient,
     CoinexClient,
     DeribitClient,
@@ -102,6 +105,7 @@ export {
     GeminiClient,
     HitBtcClient,
     HuobiClient,
+    HuobiPrivateClient,
     HuobiFuturesClient,
     HuobiSwapsClient,
     HuobiJapanClient,
