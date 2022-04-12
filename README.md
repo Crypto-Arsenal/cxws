@@ -3,6 +3,10 @@
 [![CI](https://github.com/altangent/ccxtws/workflows/Node.js%20CI/badge.svg)](https://github.com/altangent/ccxtws/actions?query=workflow%3A%22Node.js+CI%22)
 [![Coverage](https://coveralls.io/repos/github/altangent/ccxtws/badge.svg?branch=master)](https://coveralls.io/github/altangent/ccxtws?branch=master)
 
+## Credits
+
+https://github.com/altangent/ccxws
+
 A JavaScript library for connecting to realtime public APIs on all cryptocurrency exchanges.
 
 CCXWS provides a standardized eventing interface for connection to public APIs. Currently CCXWS support ticker, trade and orderbook events.
@@ -487,6 +491,5 @@ client._requestLevel2Snapshot = market =>
 
 Otherwise you should be prepared to manually verify the `sequenceId` if possible, and request the snapshot again if there is a gap between the snapshot and the first update by calling `client.requestLevel2Snapshot(market)` again.
 
-### Credits
 
 https://github.com/altangent/ccxtws
