@@ -3,6 +3,7 @@ import { EventEmitter } from "events";
 import { IPrivateClient } from "./IPrivateClient";
 import { SmartWss } from "./SmartWss";
 import { Watcher } from "./Watcher";
+import ccxt from "ccxt";
 
 export type PrivateChannelSubscription = {
     id: string;
@@ -23,6 +24,11 @@ export type SendFn = (remoteId: string, channle_sub: PrivateChannelSubscription)
  */
 export abstract class BasicPrivateClient extends EventEmitter implements IPrivateClient {
     public hasPrivateOrders: boolean;
+    // for webhook key
+    public apiToken: string;
+    public ccxt: ccxt.binance;
+
+    // public wssPath: string;
 
     protected apiKey: string;
     protected apiSecret: string;
@@ -44,11 +50,16 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
         this._privateOrderSubs = new Map();
 
         this._wss = undefined;
+        // this.wssPath = wssPath;
         this._watcher = new Watcher(this, watcherMs);
 
         this.hasPrivateOrders = false;
 
         this._wssFactory = wssFactory || (path => new SmartWss(path));
+    }
+
+    protected getWssPath() {
+        return this.wssPath;
     }
 
     //////////////////////////////////////////////
@@ -162,10 +173,13 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
      * have no effect.
      */
     protected _connect() {
-        console.log("base _connect");
+        console.log("base _connect", this._wss, this.getWssPath(), this.wssPath);
         if (!this._wss) {
             // register wss hanlder here
-            this._wss = this._wssFactory(this.wssPath);
+            // wss could be overwritten on the fly
+            console.log("_wssFactory", this.getWssPath());
+
+            this._wss = this._wssFactory(this.getWssPath());
             this._wss.on("error", this._onError.bind(this));
             this._wss.on("connecting", this._onConnecting.bind(this));
             this._wss.on("connected", this._onConnected.bind(this));

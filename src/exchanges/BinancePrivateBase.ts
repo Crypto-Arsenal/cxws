@@ -40,8 +40,12 @@ import { Trade } from "../Trade";
 import { Market } from "../Market";
 import { Level2Update } from "../Level2Update";
 import * as https from "../Https";
+import ccxt from "ccxt";
+import { PrivateClientOptions } from "../PrivateClientOptions";
+import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
+import { OrderStatus } from "../OrderStatus";
 
-export type BinanceClientOptions = {
+export type BinancePrivateClientOptions = PrivateClientOptions & {
     name?: string;
     wssPath?: string;
     restL2SnapshotPath?: string;
@@ -57,7 +61,9 @@ export type BinanceClientOptions = {
     batchTickers?: boolean;
 };
 
-export class BinanceBase extends BasicClient {
+export class BinancePrivateBase extends BasicPrivateClient {
+    public dynamicWssPath: string;
+
     public useAggTrades: boolean;
     public l2updateSpeed: string;
     public l2snapshotSpeed: string;
@@ -86,7 +92,9 @@ export class BinanceBase extends BasicClient {
         l2updateSpeed = "",
         l2snapshotSpeed = "",
         batchTickers = true,
-    }: BinanceClientOptions = {}) {
+        apiKey = "",
+        apiSecret = "",
+    }: BinancePrivateClientOptions = {}) {
         super(wssPath, name, undefined, watcherMs);
 
         this._restL2SnapshotPath = restL2SnapshotPath;
@@ -95,12 +103,8 @@ export class BinanceBase extends BasicClient {
         this.l2updateSpeed = l2updateSpeed;
         this.l2snapshotSpeed = l2snapshotSpeed;
         this.requestSnapshot = requestSnapshot;
-        this.hasTickers = true;
-        this.hasTrades = true;
-        this.hasCandles = true;
-        this.hasLevel2Snapshots = true;
-        this.hasLevel2Updates = true;
         this.batchTickers = batchTickers;
+        this.dynamicWssPath = wssPath;
 
         this._messageId = 0;
         this._tickersActive = false;
@@ -114,6 +118,71 @@ export class BinanceBase extends BasicClient {
             this.__requestLevel2Snapshot.bind(this),
             restThrottleMs,
         );
+
+        this.hasPrivateOrders = true;
+
+        // spot ccxt
+        this.ccxt = new ccxt.binance({
+            apiKey,
+            secret: apiSecret,
+            verbose: true,
+        });
+
+        try {
+            this.ccxt.checkRequiredCredentials();
+        } catch (err) {
+            this.emit("error", err);
+        }
+    }
+
+    protected _sendUnsubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription) {
+        throw new Error("Method not implemented.");
+    }
+
+    protected getWssPath() {
+        return this.dynamicWssPath;
+    }
+
+    /**
+     * Set webscoket token from REST api before subscribing to private feeds
+     * https://binance-docs.github.io/apidocs/spot/en/#user-data-streams
+     */
+    protected _connect(): void {
+        this.ccxt
+            .publicPostUserDataStream()
+            .then(d => {
+                if (d.listenKey) {
+                    this.apiToken = d.listenKey;
+                    this.dynamicWssPath = `${this.wssPath}?streams=${this.apiToken}`;
+                    setTimeout(function userDataKeepAlive() {
+                        // keepalive
+                        try {
+                            this.ccxt
+                                .sapiPutUserDataStream({ listenKey: this.apiToken })
+                                .then(d => setTimeout(userDataKeepAlive, 60 * 30 * 1000))
+                                .catch(err => setTimeout(userDataKeepAlive, 60000));
+                        } catch (error) {
+                            setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
+                        }
+                    }, 60 * 30 * 1000); // 30 minute keepalive
+                }
+                super._connect();
+            })
+            .catch(err => {
+                this.emit("error", err);
+            });
+    }
+
+    protected _sendSubPrivateOrders() {
+        console.log("_sendSubPrivateOrders");
+
+        // this._wss.send(
+        //     JSON.stringify({
+        //         method: "SUBSCRIBE",
+        //         params: ["!ticker@arr"],
+        //         id: new Date().getTime(),
+        //     }),
+        // );
     }
 
     //////////////////////////////////////////////
@@ -142,28 +211,6 @@ export class BinanceBase extends BasicClient {
             this._wss.send(
                 JSON.stringify({
                     method: "SUBSCRIBE",
-                    params: [`${remote_id.toLowerCase()}@ticker`],
-                    id: ++this._messageId,
-                }),
-            );
-        }
-    }
-
-    protected _sendUnsubTicker(remote_id: string) {
-        if (this.batchTickers) {
-            if (this._tickerSubs.size > 1) return;
-            this._tickersActive = false;
-            this._wss.send(
-                JSON.stringify({
-                    method: "UNSUBSCRIBE",
-                    params: ["!ticker@arr"],
-                    id: ++this._messageId,
-                }),
-            );
-        } else {
-            this._wss.send(
-                JSON.stringify({
-                    method: "UNSUBSCRIBE",
                     params: [`${remote_id.toLowerCase()}@ticker`],
                     id: ++this._messageId,
                 }),
@@ -233,16 +280,6 @@ export class BinanceBase extends BasicClient {
         this._batchUnsub(stream);
     }
 
-    protected _sendSubLevel2Updates(remote_id: string) {
-        if (this.requestSnapshot)
-            this._requestLevel2Snapshot(this._level2UpdateSubs.get(remote_id));
-        const stream =
-            remote_id.toLowerCase() +
-            "@depth" +
-            (this.l2updateSpeed ? `@${this.l2updateSpeed}` : "");
-        this._batchSub(stream);
-    }
-
     protected _sendUnsubLevel2Updates(remote_id: string) {
         const stream =
             remote_id.toLowerCase() +
@@ -267,11 +304,46 @@ export class BinanceBase extends BasicClient {
         throw new Error("Method not implemented.");
     }
 
-    /////////////////////////////////////////////
-
+    /**
+     *
+     * @param raw {
+  "e": "executionReport",        // Event type
+  "E": 1499405658658,            // Event time
+  "s": "ETHBTC",                 // Symbol
+  "c": "mUvoqJxFIILMdfAW5iGSOW", // Client order ID
+  "S": "BUY",                    // Side
+  "o": "LIMIT",                  // Order type
+  "f": "GTC",                    // Time in force
+  "q": "1.00000000",             // Order quantity
+  "p": "0.10264410",             // Order price
+  "P": "0.00000000",             // Stop price
+  "F": "0.00000000",             // Iceberg quantity
+  "g": -1,                       // OrderListId
+  "C": "",                       // Original client order ID; This is the ID of the order being canceled
+  "x": "NEW",                    // Current execution type
+  "X": "NEW",                    // Current order status
+  "r": "NONE",                   // Order reject reason; will be an error code.
+  "i": 4293153,                  // Order ID
+  "l": "0.00000000",             // Last executed quantity
+  "z": "0.00000000",             // Cumulative filled quantity
+  "L": "0.00000000",             // Last executed price
+  "n": "0",                      // Commission amount
+  "N": null,                     // Commission asset
+  "T": 1499405658657,            // Transaction time
+  "t": -1,                       // Trade ID
+  "I": 8641984,                  // Ignore
+  "w": true,                     // Is the order on the book?
+  "m": false,                    // Is this trade the maker side?
+  "M": false,                    // Ignore
+  "O": 1499405658657,            // Order creation time
+  "Z": "0.00000000",             // Cumulative quote asset transacted quantity
+  "Y": "0.00000000",             // Last quote asset transacted quantity (i.e. lastPrice * lastQty)
+  "Q": "0.00000000"              // Quote Order Qty
+}
+     */
     protected _onMessage(raw: string) {
         const msg = JSON.parse(raw);
-
+        console.log("MSg", msg);
         // subscribe/unsubscribe responses
         if (msg.result === null && msg.id) {
             // console.log(msg);
@@ -292,63 +364,63 @@ export class BinanceBase extends BasicClient {
             return;
         }
 
-        // ticker
-        if (msg.stream === "!ticker@arr") {
-            for (const raw of msg.data) {
-                const remote_id = raw.s;
-                const market = this._tickerSubs.get(remote_id);
-                if (!market) continue;
+        if (msg.data.e === "executionReport") {
+            let {
+                x: executionType,
+                s: symbol,
+                q: amount,
+                z: amountFilled,
+                S: side,
+                i: orderId,
+                X: orderStatus,
+                L: lastExecutedPrice,
+                n: commissionAmount,
+                N: commissionCurrency,
+            } = msg.data;
 
-                const ticker = this._constructTicker(raw, market);
-                this.emit("ticker", ticker, market);
+            const change = {
+                exchange: "Binance",
+                pair: symbol,
+                externalOrderId: orderId,
+                status: orderStatus,
+                msg: orderStatus,
+                price: lastExecutedPrice,
+                amount: amount,
+                amountFilled: amountFilled,
+                commissionAmount: commissionAmount,
+                commissionCurrency: commissionCurrency,
+            };
+
+            // map binance order status to our status
+            // https://binance-docs.github.io/apidocs/spot/en/#public-api-definitions
+            /**
+             *  const statuses = {
+            'NEW': 'open',
+            'PARTIALLY_FILLED': 'open',
+            'FILLED': 'closed',
+            'CANCELED': 'canceled',
+            'PENDING_CANCEL': 'canceling', // currently unused
+            'REJECTED': 'rejected',
+            'EXPIRED': 'expired',
+        };
+             */
+            if (change.status === "NEW") {
+                change.status = OrderStatus.NEW;
+            } else if (change.status === "PARTIALLY_FILLED") {
+                change.status = OrderStatus.PARTIALLY_FILLED;
+            } else if (change.status === "FILLED") {
+                change.status = OrderStatus.FILLED;
+            } else if (change.status === "CANCELED" || change.status === "EXPIRED") {
+                change.status = OrderStatus.CANCELED;
             }
-            return;
-        }
+            // SKIP REJECTED and PENDING_CANCEL
+            else {
+                console.log(`not going to update with status ${change.status}`);
+                console.log("change", { change });
+                return;
+            }
 
-        // trades
-        if (msg.stream.toLowerCase().endsWith("trade")) {
-            const remote_id = msg.data.s;
-            const market = this._tradeSubs.get(remote_id);
-            if (!market) return;
-
-            const trade = this.useAggTrades
-                ? this._constructAggTrade(msg, market)
-                : this._constructRawTrade(msg, market);
-            this.emit("trade", trade, market);
-            return;
-        }
-
-        // candle
-        if (msg.data.e === "kline") {
-            const remote_id = msg.data.s;
-            const market = this._candleSubs.get(remote_id);
-            if (!market) return;
-
-            const candle = this._constructCandle(msg);
-            this.emit("candle", candle, market);
-            return;
-        }
-
-        // l2snapshot
-        if (msg.stream.match(/@depth20/)) {
-            const remote_id = msg.stream.split("@")[0].toUpperCase();
-            const market = this._level2SnapshotSubs.get(remote_id);
-            if (!market) return;
-
-            const snapshot = this._constructLevel2Snapshot(msg, market);
-            this.emit("l2snapshot", snapshot, market);
-            return;
-        }
-
-        // l2update
-        if (msg.stream.match(/@depth/)) {
-            const remote_id = msg.stream.split("@")[0].toUpperCase();
-            const market = this._level2UpdateSubs.get(remote_id);
-            if (!market) return;
-
-            const update = this._constructLevel2Update(msg, market);
-            this.emit("l2update", update, market);
-            return;
+            this.emit("orders", change);
         }
     }
 

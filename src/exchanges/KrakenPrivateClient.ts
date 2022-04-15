@@ -38,7 +38,6 @@ export type KrakenClientOptions = PrivateClientOptions & {
     determine the remoteIds to send to the server on all sub/unsub requests.
   */
 export class KrakenPrivateClient extends BasicPrivateClient {
-    public apiToken: string;
     public ccxt: ccxt.kraken;
 
     public debounceWait: number;
