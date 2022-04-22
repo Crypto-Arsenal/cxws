@@ -30,10 +30,6 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
 
     // public wssPath: string;
 
-    protected apiKey: string;
-    protected apiSecret: string;
-    protected apiPassword: string;
-
     protected _wssFactory: WssFactoryFn;
     protected _privateOrderSubs: PrivateChannelSubscriptionMap;
 
@@ -43,6 +39,9 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
     constructor(
         readonly wssPath: string,
         readonly name: string,
+        readonly apiKey: string,
+        readonly apiSecret: string,
+        readonly apiPassword: string = "",
         wssFactory?: WssFactoryFn,
         watcherMs?: number,
     ) {

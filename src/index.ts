@@ -38,6 +38,7 @@ import { DeribitClient } from "./exchanges/DeribitClient";
 import { DigifinexClient } from "./exchanges/DigifinexClient";
 import { ErisXClient } from "./exchanges/ErisxClient";
 import { FtxClient } from "./exchanges/FtxClient";
+import { FtxPrivateClient } from "./exchanges/FtxPrivateClient";
 import { FtxUsClient } from "./exchanges/FtxUsClient";
 import { GateioClient } from "./exchanges/GateioClient";
 import { GeminiClient } from "./exchanges/Geminiclient";
@@ -104,6 +105,7 @@ export {
     DigifinexClient,
     ErisXClient,
     FtxClient,
+    FtxPrivateClient,
     FtxUsClient,
     GateioClient,
     GeminiClient,
@@ -152,6 +154,7 @@ export default {
     Digifinex: DigifinexClient,
     ErisX: ErisXClient,
     Ftx: FtxClient,
+    FtxPrivate: FtxPrivateClient,
     FtxUs: FtxUsClient,
     Gateio: GateioClient,
     Gemini: GeminiClient,

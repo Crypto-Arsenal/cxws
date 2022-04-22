@@ -9,9 +9,7 @@ import moment from "moment";
 
 export class HuobiPrivateBase extends BasicPrivateClient {
     constructor({ apiKey, apiSecret, name, wssPath, watcherMs }) {
-        super(wssPath, name, undefined, watcherMs);
-        this.apiKey = apiKey;
-        this.apiSecret = apiSecret;
+        super(wssPath, name, apiKey, apiSecret, undefined, watcherMs);
         this.hasPrivateOrders = true;
     }
 

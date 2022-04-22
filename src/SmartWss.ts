@@ -58,6 +58,7 @@ export class SmartWss extends EventEmitter {
         if (this._connected) {
             try {
                 this._wss.send(data);
+                console.log("sent");
             } catch (e) {
                 this.emit("error", e);
             }

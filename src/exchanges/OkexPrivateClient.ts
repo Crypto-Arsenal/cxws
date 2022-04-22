@@ -52,11 +52,8 @@ export class OkexPrivateClient extends BasicPrivateClient {
         apiPassword,
         sendThrottleMs = 20,
     }: OkexClientOptions = {}) {
-        super(wssPath, "OKEx", undefined, watcherMs);
+        super(wssPath, "OKEx", apiKey, apiSecret, apiPassword, undefined, watcherMs);
         this.hasPrivateOrders = true;
-        this.apiKey = apiKey;
-        this.apiSecret = apiSecret;
-        this.apiPassword = apiPassword;
         this._sendMessage = throttle(this.__sendMessage.bind(this), sendThrottleMs);
     }
 

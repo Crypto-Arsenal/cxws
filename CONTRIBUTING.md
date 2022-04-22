@@ -583,3 +583,18 @@ client.on("ticker", console.log);
 // client.subscribeLevel2Updates(market);
 // client.on("l2update", console.log);
 ```
+
+### Add Private Websocket
+
+- Need the client to extend `BasicPrivateClient`
+
+- Implement _onConnected to send websocket login auth
+
+> we HAVE to call `SUPER` for every override
+
+```js
+   protected _onConnected() {
+        this._sendAuthentication();
+        super._onConnected();
+    }
+```

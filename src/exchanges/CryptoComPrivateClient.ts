@@ -15,9 +15,7 @@ export class CryptoComPrivateClient extends BasicPrivateClient {
         name = "CryptoCom",
         wssPath = "wss://stream.crypto.com/v2/user",
     }) {
-        super(wssPath, name, undefined);
-        this.apiKey = apiKey;
-        this.apiSecret = apiSecret;
+        super(wssPath, name, apiKey, apiSecret, "", undefined);
         this.hasPrivateOrders = true;
     }
 

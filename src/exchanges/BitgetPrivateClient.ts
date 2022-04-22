@@ -19,10 +19,7 @@ export class BitgetPrivateClient extends BasicPrivateClient {
         // international
         wssPath = "wss://ws.bitget.com/spot/v1/stream",
     }) {
-        super(wssPath, name, undefined);
-        this.apiKey = apiKey;
-        this.apiSecret = apiSecret;
-        this.apiPassword = apiPassword;
+        super(wssPath, name, apiKey, apiSecret, apiPassword, undefined);
         this.hasPrivateOrders = true;
     }
 

@@ -95,7 +95,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
         apiKey = "",
         apiSecret = "",
     }: BinancePrivateClientOptions = {}) {
-        super(wssPath, name, undefined, watcherMs);
+        super(wssPath, name, apiKey, apiSecret, "", undefined, watcherMs);
 
         this._restL2SnapshotPath = restL2SnapshotPath;
 
@@ -146,6 +146,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
     /**
      * Set webscoket token from REST api before subscribing to private feeds
      * https://binance-docs.github.io/apidocs/spot/en/#user-data-streams
+     * TODO: SEE HOW KUOCOIN DOES IT!!!
      */
     protected _connect(): void {
         this.ccxt
