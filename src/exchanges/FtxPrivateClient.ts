@@ -10,6 +10,6 @@ export class FtxPrivateClient extends FtxPrivateBaseClient {
         apiKey,
         apiSecret,
     }: PrivateClientOptions = {}) {
-        super({ name: "FTX", apiKey, apiSecret, wssPath, watcherMs });
+        super({ name: "ftx", apiKey, apiSecret, wssPath, watcherMs });
     }
 }

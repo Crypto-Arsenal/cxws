@@ -7,7 +7,7 @@ import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateC
 import { stringify } from "querystring";
 import { createHmac } from "crypto";
 import { CancelableFn } from "../flowcontrol/Fn";
-
+import * as ccxt from "ccxt";
 export class BitgetPrivateClient extends BasicPrivateClient {
     protected _pingInterval: NodeJS.Timeout;
 
@@ -15,7 +15,7 @@ export class BitgetPrivateClient extends BasicPrivateClient {
         apiKey,
         apiSecret,
         apiPassword,
-        name = "Bitget",
+        name = "bitget" as ccxt.ExchangeId,
         // international
         wssPath = "wss://ws.bitget.com/spot/v1/stream",
     }) {

@@ -40,13 +40,14 @@ import { Trade } from "../Trade";
 import { Market } from "../Market";
 import { Level2Update } from "../Level2Update";
 import * as https from "../Https";
-import ccxt from "ccxt";
+import ccxt, { ExchangeId } from "ccxt";
 import { PrivateClientOptions } from "../PrivateClientOptions";
 import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
 import { OrderStatus } from "../OrderStatus";
+import { Order } from "../Order";
 
 export type BinancePrivateClientOptions = PrivateClientOptions & {
-    name?: string;
+    name?: ccxt.ExchangeId;
     wssPath?: string;
     restL2SnapshotPath?: string;
     watcherMs?: number;
@@ -80,7 +81,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
     protected _requestLevel2Snapshot: CancelableFn;
 
     constructor({
-        name,
+        name = "binance",
         wssPath,
         restL2SnapshotPath,
         watcherMs = 30000,
@@ -380,7 +381,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
             } = msg.data;
 
             const change = {
-                exchange: "Binance",
+                exchange: this.name,
                 pair: symbol,
                 externalOrderId: orderId,
                 status: orderStatus,
@@ -390,7 +391,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
                 amountFilled: amountFilled,
                 commissionAmount: commissionAmount,
                 commissionCurrency: commissionCurrency,
-            };
+            } as Order;
 
             // map binance order status to our status
             // https://binance-docs.github.io/apidocs/spot/en/#public-api-definitions

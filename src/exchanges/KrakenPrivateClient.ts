@@ -54,7 +54,7 @@ export class KrakenPrivateClient extends BasicPrivateClient {
         apiKey = "",
         apiSecret = "",
     }: KrakenClientOptions = {}) {
-        super(wssPath, "Kraken", apiKey, apiSecret, "", undefined, watcherMs);
+        super(wssPath, "kraken", apiKey, apiSecret, "", undefined, watcherMs);
 
         this.hasPrivateOrders = true;
 

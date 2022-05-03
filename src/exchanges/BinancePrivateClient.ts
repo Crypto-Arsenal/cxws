@@ -22,7 +22,7 @@ export class BinancePrivateClient extends BinancePrivateBase {
             restL2SnapshotPath = "https://testnet.binance.vision/api/v1/depth";
         }
         super({
-            name: "Binance",
+            name: "binance",
             restL2SnapshotPath,
             wssPath,
             useAggTrades,

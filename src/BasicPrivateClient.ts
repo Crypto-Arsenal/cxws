@@ -38,7 +38,7 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
 
     constructor(
         readonly wssPath: string,
-        readonly name: string,
+        readonly name: ccxt.ExchangeId,
         readonly apiKey: string,
         readonly apiSecret: string,
         readonly apiPassword: string = "",

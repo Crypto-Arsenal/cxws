@@ -7,12 +7,12 @@ import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateC
 import { base64Encode, hmacSign } from "../Jwt";
 import moment from "moment";
 import crypto from "crypto-js";
-
+import * as ccxt from "ccxt";
 export class CryptoComPrivateClient extends BasicPrivateClient {
     constructor({
         apiKey,
         apiSecret,
-        name = "CryptoCom",
+        name = "cryptocom" as ccxt.ExchangeId,
         wssPath = "wss://stream.crypto.com/v2/user",
     }) {
         super(wssPath, name, apiKey, apiSecret, "", undefined);

@@ -11,6 +11,7 @@ import { Level2Point } from "../Level2Point";
 import { Level2Snapshot } from "../Level2Snapshots";
 import { Level2Update } from "../Level2Update";
 import { NotImplementedFn } from "../NotImplementedFn";
+import { Order } from "../Order";
 import { OrderStatus } from "../OrderStatus";
 import { Ticker } from "../Ticker";
 import { Trade } from "../Trade";
@@ -235,7 +236,7 @@ export class FtxPrivateBaseClient extends BasicPrivateClient {
             case "fills":
                 orderStatus = OrderStatus.PARTIALLY_FILLED;
                 this.emit("orders", {
-                    exchange: "Ftx",
+                    exchange: this.name,
                     pair: data.market,
                     externalOrderId: data.orderId,
                     status: orderStatus,
@@ -245,7 +246,7 @@ export class FtxPrivateBaseClient extends BasicPrivateClient {
                     amountFilled: data.size,
                     commissionAmount: data.fee,
                     commissionCurrency: data.feeCurrency,
-                });
+                } as Order);
                 break;
         }
     }
