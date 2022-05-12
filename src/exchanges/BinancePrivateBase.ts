@@ -306,46 +306,10 @@ export class BinancePrivateBase extends BasicPrivateClient {
         throw new Error("Method not implemented.");
     }
 
-    /**
-     *
-     * @param raw {
-  "e": "executionReport",        // Event type
-  "E": 1499405658658,            // Event time
-  "s": "ETHBTC",                 // Symbol
-  "c": "mUvoqJxFIILMdfAW5iGSOW", // Client order ID
-  "S": "BUY",                    // Side
-  "o": "LIMIT",                  // Order type
-  "f": "GTC",                    // Time in force
-  "q": "1.00000000",             // Order quantity
-  "p": "0.10264410",             // Order price
-  "P": "0.00000000",             // Stop price
-  "F": "0.00000000",             // Iceberg quantity
-  "g": -1,                       // OrderListId
-  "C": "",                       // Original client order ID; This is the ID of the order being canceled
-  "x": "NEW",                    // Current execution type
-  "X": "NEW",                    // Current order status
-  "r": "NONE",                   // Order reject reason; will be an error code.
-  "i": 4293153,                  // Order ID
-  "l": "0.00000000",             // Last executed quantity
-  "z": "0.00000000",             // Cumulative filled quantity
-  "L": "0.00000000",             // Last executed price
-  "n": "0",                      // Commission amount
-  "N": null,                     // Commission asset
-  "T": 1499405658657,            // Transaction time
-  "t": -1,                       // Trade ID
-  "I": 8641984,                  // Ignore
-  "w": true,                     // Is the order on the book?
-  "m": false,                    // Is this trade the maker side?
-  "M": false,                    // Ignore
-  "O": 1499405658657,            // Order creation time
-  "Z": "0.00000000",             // Cumulative quote asset transacted quantity
-  "Y": "0.00000000",             // Last quote asset transacted quantity (i.e. lastPrice * lastQty)
-  "Q": "0.00000000"              // Quote Order Qty
-}
-     */
     protected _onMessage(raw: string) {
+        console.log('_onMessage', raw);
+
         const msg = JSON.parse(raw);
-        console.log("MSg", msg);
         // subscribe/unsubscribe responses
         if (msg.result === null && msg.id) {
             // console.log(msg);
@@ -367,60 +331,90 @@ export class BinancePrivateBase extends BasicPrivateClient {
         }
 
         if (msg.data.e === "executionReport") {
+            /**
+             * https://binance-docs.github.io/apidocs/spot/en/#payload-order-update
+             * @example
+{
+    "e": "executionReport",        // Event type
+    "E": 1499405658658,            // Event time
+    "s": "ETHBTC",                 // Symbol
+    "c": "mUvoqJxFIILMdfAW5iGSOW", // Client order ID
+    "S": "BUY",                    // Side
+    "o": "LIMIT",                  // Order type
+    "f": "GTC",                    // Time in force
+    "q": "1.00000000",             // Order quantity
+    "p": "0.10264410",             // Order price
+    "P": "0.00000000",             // Stop price
+    "d": 4,                        // Trailing Delta; This is only visible if the order was a trailing stop order.
+    "F": "0.00000000",             // Iceberg quantity
+    "g": -1,                       // OrderListId
+    "C": "",                       // Original client order ID; This is the ID of the order being canceled
+    "x": "NEW",                    // Current execution type
+    "X": "NEW",                    // Current order status
+    "r": "NONE",                   // Order reject reason; will be an error code.
+    "i": 4293153,                  // Order ID
+    "l": "0.00000000",             // Last executed quantity
+    "z": "0.00000000",             // Cumulative filled quantity
+    "L": "0.00000000",             // Last executed price
+    "n": "0",                      // Commission amount
+    "N": null,                     // Commission asset
+    "T": 1499405658657,            // Transaction time
+    "t": -1,                       // Trade ID
+    "I": 8641984,                  // Ignore
+    "w": true,                     // Is the order on the book?
+    "m": false,                    // Is this trade the maker side?
+    "M": false,                    // Ignore
+    "O": 1499405658657,            // Order creation time
+    "Z": "0.00000000",             // Cumulative quote asset transacted quantity
+    "Y": "0.00000000",             // Last quote asset transacted quantity (i.e. lastPrice * lastQty)
+    "Q": "0.00000000"              // Quote Order Qty
+}
+             */
             let {
                 x: executionType,
                 s: symbol,
                 q: amount,
                 z: amountFilled,
                 S: side,
+                p: orderPrice,
                 i: orderId,
-                X: orderStatus,
+                X: status,
                 L: lastExecutedPrice,
                 n: commissionAmount,
                 N: commissionCurrency,
             } = msg.data;
 
+            // map to our status
+            if (status === "NEW") {
+                status = OrderStatus.NEW;
+            } else if (status === "PARTIALLY_FILLED") {
+                status = OrderStatus.PARTIALLY_FILLED;
+            } else if (status === "FILLED") {
+                status = OrderStatus.FILLED;
+            } else if (status === "CANCELED" || status === "EXPIRED") {
+                status = OrderStatus.CANCELED;
+            } else {
+                // SKIP REJECTED and PENDING_CANCEL
+                console.log(`not going to update with status ${status}`);
+                return;
+            }
+
+            const isSell = side.toUpperCase() == "SELL";
+            amount = Math.abs(Number(amount || 0));
+            amountFilled = Math.abs(Number(amountFilled || 0));
+            const price = Number(lastExecutedPrice || 0) || Number(orderPrice || 0);
             const change = {
                 exchange: this.name,
                 pair: symbol,
                 externalOrderId: orderId,
-                status: orderStatus,
-                msg: orderStatus,
-                price: lastExecutedPrice,
-                amount: amount,
-                amountFilled: amountFilled,
+                status: status,
+                msg: status,
+                price: price,
+                amount: isSell ? -amount : amount,
+                amountFilled: isSell ? -amountFilled : amountFilled,
                 commissionAmount: commissionAmount,
                 commissionCurrency: commissionCurrency,
             } as Order;
-
-            // map binance order status to our status
-            // https://binance-docs.github.io/apidocs/spot/en/#public-api-definitions
-            /**
-             *  const statuses = {
-            'NEW': 'open',
-            'PARTIALLY_FILLED': 'open',
-            'FILLED': 'closed',
-            'CANCELED': 'canceled',
-            'PENDING_CANCEL': 'canceling', // currently unused
-            'REJECTED': 'rejected',
-            'EXPIRED': 'expired',
-        };
-             */
-            if (change.status === "NEW") {
-                change.status = OrderStatus.NEW;
-            } else if (change.status === "PARTIALLY_FILLED") {
-                change.status = OrderStatus.PARTIALLY_FILLED;
-            } else if (change.status === "FILLED") {
-                change.status = OrderStatus.FILLED;
-            } else if (change.status === "CANCELED" || change.status === "EXPIRED") {
-                change.status = OrderStatus.CANCELED;
-            }
-            // SKIP REJECTED and PENDING_CANCEL
-            else {
-                console.log(`not going to update with status ${change.status}`);
-                console.log("change", { change });
-                return;
-            }
 
             this.emit("orders", change);
         }

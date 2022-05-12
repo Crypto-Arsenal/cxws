@@ -8,6 +8,8 @@ import { stringify } from "querystring";
 import { createHmac } from "crypto";
 import { CancelableFn } from "../flowcontrol/Fn";
 import * as ccxt from "ccxt";
+import { OrderStatus } from "../OrderStatus";
+import { Order } from "../Order";
 export class BitgetPrivateClient extends BasicPrivateClient {
     protected _pingInterval: NodeJS.Timeout;
 
@@ -128,7 +130,7 @@ export class BitgetPrivateClient extends BasicPrivateClient {
                     {
                         channel: "orders",
                         instType: "spbl",
-                        instId: "ETCUSDT_SPBL",
+                        instId: "ETHUSDT_SPBL",
                     },
                 ],
             }),
@@ -140,7 +142,7 @@ export class BitgetPrivateClient extends BasicPrivateClient {
     }
 
     protected _onMessage(raw: string) {
-        console.log(raw);
+        console.log('_onMessage', raw);
 
         /**
          * if no pong in 30 seconds then reconnect
@@ -167,11 +169,75 @@ export class BitgetPrivateClient extends BasicPrivateClient {
             super._onConnected();
         }
 
-        /**
-         * @example {"action":"snapshot","arg":{"instType":"spbl","channel":"orders","instId":"ETCUSDT_SPBL"},"data":[{"instId":"ETCUSDT_SPBL","ordId":"877049591807512576","clOrdId":"68f2ae11-b4e8-4a73-a30a-7ef73734ca2f","px":"5.3221","sz":"1.0000","notional":"5.322100","ordType":"limit","force":"normal","side":"buy","accFillSz":"0.0000","avgPx":"0.0000","status":"new","cTime":1644830838157,"uTime":1644830838157,"orderFee":[]}]}
-         */
         if (arg && arg.channel == "orders" && data) {
-            this.emit("order", data);
+            /**
+             * https://bitgetlimited.github.io/apidoc/en/spot/#order-channel
+             * @example
+{
+    "action":"snapshot",
+    "arg":{
+        "instType":"spbl",
+        "channel":"orders",
+        "instId":"ETCUSDT_SPBL"
+    },
+    "data":[
+        {
+            "instId":"ETCUSDT_SPBL",
+            "ordId":"877049591807512576",
+            "clOrdId":"68f2ae11-b4e8-4a73-a30a-7ef73734ca2f",
+            "px":"5.3221",
+            "sz":"1.0000",
+            "notional":"5.322100",
+            "ordType":"limit",
+            "force":"normal",
+            "side":"buy",
+            "accFillSz":"0.0000",
+            "avgPx":"0.0000",
+            "status":"new",
+            "cTime":1644830838157,
+            "uTime":1644830838157,
+            "orderFee":{
+            }
+        }
+    ]
+}
+            */
+            for (const d of data) {
+                let status = d.status;
+
+                // map to our status
+                if (status === "new") {
+                    status = OrderStatus.NEW;
+                } else if (status === "partial-fill") {
+                    status = OrderStatus.PARTIALLY_FILLED;
+                } else if (status === "full-fill") {
+                    status = OrderStatus.FILLED;
+                } else if (status === "cancelled") {
+                    status = OrderStatus.CANCELED;
+                } else {
+                    console.log(`not going to update with status ${status}`);
+                    return;
+                }
+
+                const isSell = d.side.toLowerCase() == "sell";
+                const amount = Math.abs(Number(d.sz || 0));
+                const amountFilled = Math.abs(Number(d.accFillSz || 0));
+                const price = Number(d.avgPx || 0) || Number(d.px || 0);
+                const change = {
+                    exchange: this.name,
+                    pair: d.instId,
+                    externalOrderId: d.ordId,
+                    status: status,
+                    msg: status,
+                    price: price,
+                    amount: isSell ? -amount : amount,
+                    amountFilled: isSell ? -amountFilled : amountFilled,
+                    commissionAmount: d.fillFee,
+                    commissionCurrency: d.fillFeeCcy,
+                } as Order;
+
+                this.emit("orders", change);
+            }
         }
 
         // {"action":"push","ch":"orders#*","data":{"orderSource":"spot-web","orderCreateTime":1644823806980,"accountId":46333987,"orderPrice":"0.53181","orderSize":"9.964","symbol":"adausdt","type":"buy-limit","orderId":472952725417169,"eventType":"creation","clientOrderId":"","orderStatus":"submitted"}}

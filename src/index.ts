@@ -155,7 +155,7 @@ export const PrivateWSClient: { [key in ccxt.ExchangeId]: any } = {
     novadax: null,
     oceanex: null,
     okcoin: null,
-    okex: null,
+    okex: OkexPrivateClient,
     okex5: null,
     okx: null,
     paymium: null,

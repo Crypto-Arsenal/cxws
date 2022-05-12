@@ -11,10 +11,8 @@ import { Level2Point } from "../Level2Point";
 import { Level2Snapshot } from "../Level2Snapshots";
 import { Level2Update } from "../Level2Update";
 import { NotImplementedFn } from "../NotImplementedFn";
-import { Order } from "../Order";
 import { OrderStatus } from "../OrderStatus";
-import { Ticker } from "../Ticker";
-import { Trade } from "../Trade";
+import { Order } from "../Order";
 
 export class FtxPrivateBaseClient extends BasicPrivateClient {
     protected _pingInterval: NodeJS.Timeout;
@@ -156,7 +154,8 @@ export class FtxPrivateBaseClient extends BasicPrivateClient {
     protected _sendUnsubLevel3Updates = NotImplementedFn;
 
     protected _onMessage(raw) {
-        console.log(JSON.parse(raw));
+        console.log('_onMessage', raw);
+
         const { type, channel, data, msg } = JSON.parse(raw);
         if (!type) {
             return;
@@ -207,6 +206,10 @@ export class FtxPrivateBaseClient extends BasicPrivateClient {
 
         let orderStatus = "";
         let change = undefined;
+        const isSell = data.side.toLowerCase() == "sell";
+        const amount = Math.abs(Number(data.size || 0));
+        const amountFilled = Math.abs(Number(data.filledSize || 0));
+        const price = Number(data.price || 0);
         switch (channel) {
             case "orders":
                 if (data.status === "new") {
@@ -226,9 +229,9 @@ export class FtxPrivateBaseClient extends BasicPrivateClient {
                     externalOrderId: data.id,
                     status: orderStatus,
                     msg: orderStatus,
-                    price: data.price,
-                    amount: data.size,
-                    amountFilled: data.filledSize,
+                    price: price,
+                    amount: isSell ? -amount : amount,
+                    amountFilled: isSell ? -amountFilled : amountFilled,
                     commissionAmount: 0,
                     commissionCurrency: "",
                 });
@@ -241,9 +244,9 @@ export class FtxPrivateBaseClient extends BasicPrivateClient {
                     externalOrderId: data.orderId,
                     status: orderStatus,
                     msg: orderStatus,
-                    price: data.price,
+                    price: price,
                     amount: null,
-                    amountFilled: data.size,
+                    amountFilled: isSell ? -amount : amount,
                     commissionAmount: data.fee,
                     commissionCurrency: data.feeCurrency,
                 } as Order);

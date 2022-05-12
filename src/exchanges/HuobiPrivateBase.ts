@@ -6,6 +6,8 @@
 import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
 import { base64Encode, hmacSign } from "../Jwt";
 import moment from "moment";
+import { OrderStatus } from "../OrderStatus";
+import { Order } from "../Order";
 
 export class HuobiPrivateBase extends BasicPrivateClient {
     constructor({ apiKey, apiSecret, name, wssPath, watcherMs }) {
@@ -81,7 +83,7 @@ export class HuobiPrivateBase extends BasicPrivateClient {
     }
 
     protected _onMessage(raw: string) {
-        console.log(raw);
+        console.log('_onMessage', raw);
 
         let msgs = JSON.parse(raw);
         // handle pongs
@@ -107,7 +109,69 @@ export class HuobiPrivateBase extends BasicPrivateClient {
 
         // {"action":"push","ch":"orders#*","data":{"orderSource":"spot-web","orderCreateTime":1644823806980,"accountId":46333987,"orderPrice":"0.53181","orderSize":"9.964","symbol":"adausdt","type":"buy-limit","orderId":472952725417169,"eventType":"creation","clientOrderId":"","orderStatus":"submitted"}}
         if (ch == "orders#*" && data) {
-            this.emit("orders", data);
+            /**
+             * https://huobiapi.github.io/docs/spot/v1/en/#subscribe-order-updates
+             *  @example
+{
+    "action":"push",
+    "ch":"orders#btcusdt",
+    "data":
+    {
+        "tradePrice":"76.000000000000000000",
+        "tradeVolume":"1.013157894736842100",
+        "tradeId":301,
+        "tradeTime":1583854188883,
+        "aggressor":true,
+        "remainAmt":"0.000000000000000400000000000000000000",
+        "execAmt":"2",
+        "orderId":27163536,
+        "type":"sell-limit",
+        "clientOrderId":"abc123",
+        "orderSource":"spot-api",
+        "orderPrice":"15000",
+        "orderSize":"0.01",
+        "orderStatus":"filled",
+        "symbol":"btcusdt",
+        "eventType":"trade"
+    }
+}
+             */
+            let status = data.orderStatus;
+            // map to our status
+            if (status === "submitted") {
+                status = OrderStatus.NEW;
+            } else if (status === "partial-filled") {
+                status = OrderStatus.PARTIALLY_FILLED;
+            } else if (status === "filled") {
+                status = OrderStatus.FILLED;
+            } else if (status === "canceled" || status === "partial-canceled") {
+                status = OrderStatus.CANCELED;
+            } else {
+                // SKIP rejected
+                console.log(`not going to update with status ${status}`);
+                return;
+            }
+            const isSell = data.type.substring(0, 4).toLowerCase() == "sell";
+            let amount = Math.abs(Number(data.orderSize || 0));
+            const amountFilled = Math.abs(Number(data.tradeVolume || 0));
+            const price = Number(data.tradePrice || 0) || Number(data.orderPrice || 0);
+            if (status === OrderStatus.FILLED) {
+                amount = amountFilled;
+            }
+            const change = {
+                exchange: this.name,
+                pair: data.symbol,
+                externalOrderId: data.orderId || data.clientOrderId,
+                status: status,
+                msg: status,
+                price: price,
+                amount: isSell ? -amount : amount,
+                amountFilled: isSell ? -amountFilled : amountFilled,
+                commissionAmount: null,
+                commissionCurrency: null,
+            } as Order;
+
+            this.emit("orders", change);
             // {"action":"sub","code":200,"ch":"orders#*","data":{}} send empty snapshot on restart
         }
     }
