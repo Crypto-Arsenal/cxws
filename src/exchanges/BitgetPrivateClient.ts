@@ -10,6 +10,53 @@ import { CancelableFn } from "../flowcontrol/Fn";
 import * as ccxt from "ccxt";
 import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
+
+// TODO: send instIds from broker
+const instIds = [
+    "BTCUSDT_SPBL",
+    "ETHUSDT_SPBL",
+    "BNBUSDT_SPBL",
+    "XRPUSDT_SPBL",
+    "ADAUSDT_SPBL",
+    "SOLUSDT_SPBL",
+    "AVAXUSDT_SPBL",
+    "DOTUSDT_SPBL",
+    "DOGEUSDT_SPBL",
+    "SHIBUSDT_SPBL",
+    "MATICUSDT_SPBL",
+    "WBTCUSDT_SPBL",
+    "CROUSDT_SPBL",
+    "DAIUSDT_SPBL",
+    "ATOMUSDT_SPBL",
+    "LTCUSDT_SPBL",
+    "NEARUSDT_SPBL",
+    "LINKUSDT_SPBL",
+    "UNIUSDT_SPBL",
+    "TRXUSDT_SPBL",
+    "FTTUSDT_SPBL",
+    "BCHUSDT_SPBL",
+    "ETCUSDT_SPBL",
+    "MANAUSDT_SPBL",
+    "ICPUSDT_SPBL",
+    "SANDUSDT_SPBL",
+    "EGLDUSDT_SPBL",
+    "FTMUSDT_SPBL",
+    "FILUSDT_SPBL",
+    "APEUSDT_SPBL",
+    "AXSUSDT_SPBL",
+    "KLAYUSDT_SPBL",
+    "RUNEUSDT_SPBL",
+    "HNTUSDT_SPBL",
+    "EOSUSDT_SPBL",
+    "CAKEUSDT_SPBL",
+    "BTTUSDT_SPBL",
+    "AAVEUSDT_SPBL",
+    "MKRUSDT_SPBL",
+    "GRTUSDT_SPBL",
+    "LUNAUSDT_SPBL",
+    "CVXUSDT_SPBL",
+    "NEXOUSDT_SPBL",
+]
 export class BitgetPrivateClient extends BasicPrivateClient {
     protected _pingInterval: NodeJS.Timeout;
 
@@ -126,13 +173,20 @@ export class BitgetPrivateClient extends BasicPrivateClient {
         this._wss.send(
             JSON.stringify({
                 op: "subscribe",
-                args: [
-                    {
+                args: instIds.map((instId) => {
+                    return {
                         channel: "orders",
                         instType: "spbl",
-                        instId: "ETHUSDT_SPBL",
-                    },
-                ],
+                        instId: instId,
+                    }
+                }),
+                // args: [
+                //     {
+                //         channel: "orders",
+                //         instType: "spbl",
+                //         instId: "ETHUSDT_SPBL",
+                //     },
+                // ],
             }),
         );
     }
@@ -196,8 +250,7 @@ export class BitgetPrivateClient extends BasicPrivateClient {
             "status":"new",
             "cTime":1644830838157,
             "uTime":1644830838157,
-            "orderFee":{
-            }
+            "orderFee":[{"feeCcy":"USDT","fee":"-0.01006285"}]
         }
     ]
 }
@@ -223,6 +276,16 @@ export class BitgetPrivateClient extends BasicPrivateClient {
                 const amount = Math.abs(Number(d.sz || 0));
                 const amountFilled = Math.abs(Number(d.accFillSz || 0));
                 const price = Number(d.avgPx || 0) || Number(d.px || 0);
+                let commissionCurrency = null;
+                let commissionAmount = 0;
+                if (Array.isArray(d.orderFee) && d.orderFee.length) {
+                    commissionCurrency = d.orderFee[0].feeCcy;
+                    for (const orderFee of d.orderFee) {
+                        if (orderFee.feeCcy === commissionCurrency) {
+                            commissionAmount += Number(orderFee.fee || 0);
+                        }
+                    }
+                }
                 const change = {
                     exchange: this.name,
                     pair: d.instId,
@@ -232,8 +295,8 @@ export class BitgetPrivateClient extends BasicPrivateClient {
                     price: price,
                     amount: isSell ? -amount : amount,
                     amountFilled: isSell ? -amountFilled : amountFilled,
-                    commissionAmount: d.fillFee,
-                    commissionCurrency: d.fillFeeCcy,
+                    commissionAmount: commissionAmount,
+                    commissionCurrency: commissionCurrency,
                 } as Order;
 
                 this.emit("orders", change);
