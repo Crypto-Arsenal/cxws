@@ -10,6 +10,8 @@ import { throttle } from "../flowcontrol/Throttle";
 import { Market } from "../Market";
 import { PrivateClientOptions } from "../PrivateClientOptions";
 import { base64Encode, hmacSign } from "../Jwt";
+import { OrderStatus } from "../OrderStatus";
+import { Order } from "../Order";
 
 const pongBuffer = Buffer.from("pong");
 
@@ -138,6 +140,8 @@ export class OkexPrivateClient extends BasicPrivateClient {
     }
 
     protected _onMessage(raw) {
+        console.log('_onMessage', raw);
+
         // process JSON message
         try {
             if (raw == "pong") {
@@ -180,61 +184,102 @@ export class OkexPrivateClient extends BasicPrivateClient {
             return;
         }
 
-        /**
-         * https://www.okx.com/docs-v5/en/#websocket-api-private-channel-order-channel
-         * msg {
-  arg: { channel: 'orders', instType: 'SPOT', uid: '277380621964292096' },
-  data: [
+        if (msg.arg.channel === "orders") {
+            /**
+             * https://www.okx.com/docs-v5/en/#websocket-api-private-channel-order-channel
+             * @example
     {
-      accFillSz: '0',
-      amendResult: '',
-      avgPx: '0',
-      cTime: '1644399065370',
-      category: 'normal',
-      ccy: '',
-      clOrdId: '',
-      code: '0',
-      execType: '',
-      fee: '0',
-      feeCcy: 'SOL',
-      fillFee: '0',
-      fillFeeCcy: '',
-      fillNotionalUsd: '',
-      fillPx: '',
-      fillSz: '0',
-      fillTime: '',
-      instId: 'SOL-USDT',
-      instType: 'SPOT',
-      lever: '0',
-      msg: '',
-      notionalUsd: '0.20019800000000001',
-      ordId: '411574742792163328',
-      ordType: 'limit',
-      pnl: '0',
-      posSide: '',
-      px: '20',
-      rebate: '0',
-      rebateCcy: 'USDT',
-      reduceOnly: 'false',
-      reqId: '',
-      side: 'buy',
-      slOrdPx: '',
-      slTriggerPx: '',
-      slTriggerPxType: 'last',
-      source: '',
-      state: 'live', | canceled
-      sz: '0.01',
-      tag: '',
-      tdMode: 'cash',
-      tgtCcy: '',
-      tpOrdPx: '',
-      tpTriggerPx: '',
-      tpTriggerPxType: 'last',
-      tradeId: '',
-      uTime: '1644399065370'
+        arg: { channel: 'orders', instType: 'SPOT', uid: '277380621964292096' },
+        data: [
+            {
+                accFillSz: '0',
+                amendResult: '',
+                avgPx: '0',
+                cTime: '1644399065370',
+                category: 'normal',
+                ccy: '',
+                clOrdId: '',
+                code: '0',
+                execType: '',
+                fee: '0',
+                feeCcy: 'SOL',
+                fillFee: '0',
+                fillFeeCcy: '',
+                fillNotionalUsd: '',
+                fillPx: '',
+                fillSz: '0',
+                fillTime: '',
+                instId: 'SOL-USDT',
+                instType: 'SPOT',
+                lever: '0',
+                msg: '',
+                notionalUsd: '0.20019800000000001',
+                ordId: '411574742792163328',
+                ordType: 'limit',
+                pnl: '0',
+                posSide: '',
+                px: '20',
+                rebate: '0',
+                rebateCcy: 'USDT',
+                reduceOnly: 'false',
+                reqId: '',
+                side: 'buy',
+                slOrdPx: '',
+                slTriggerPx: '',
+                slTriggerPxType: 'last',
+                source: '',
+                state: 'live', | canceled
+                sz: '0.01',
+                tag: '',
+                tdMode: 'cash',
+                tgtCcy: '',
+                tpOrdPx: '',
+                tpTriggerPx: '',
+                tpTriggerPxType: 'last',
+                tradeId: '',
+                uTime: '1644399065370'
+            }
+        ]
     }
-  ]
-}
-         */
+            */
+            for (const d of msg.data) {
+                let status = d.state;
+                // map to our status
+                if (status === "live") {
+                    status = OrderStatus.NEW;
+                } else if (status === "partially_filled") {
+                    status = OrderStatus.PARTIALLY_FILLED;
+                } else if (status === "filled") {
+                    status = OrderStatus.FILLED;
+                } else if (status === "canceled") {
+                    status = OrderStatus.CANCELED;
+                } else {
+                    console.log(`not going to update with status ${status}`);
+                    return;
+                }
+
+                const isSell = d.side.substring(0, 4).toLowerCase() == "sell";
+                const amount = Math.abs(Number(d.sz || 0));
+                const amountFilled = Math.abs(Number(d.accFillSz || 0));
+                const price = Number(d.avgPx || 0) || Number(d.px || 0);
+                const change = {
+                    exchange: this.name,
+                    pair: d.instId,
+                    externalOrderId: d.ordId || d.clOrdId,
+                    status: status,
+                    msg: status,
+                    price: price,
+                    amount: isSell ? -amount : amount,
+                    amountFilled: isSell ? -amountFilled : amountFilled,
+                    // Negative number represents the user transaction fee charged by the platform.
+                    // Positive number represents rebate.
+                    commissionAmount: -Number(d.fee || 0),
+                    commissionCurrency: d.feeCcy,
+                } as Order;
+
+                this.emit("orders", change);
+            }
+        }
+
     }
 }

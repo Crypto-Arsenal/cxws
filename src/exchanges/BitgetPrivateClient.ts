@@ -8,6 +8,55 @@ import { stringify } from "querystring";
 import { createHmac } from "crypto";
 import { CancelableFn } from "../flowcontrol/Fn";
 import * as ccxt from "ccxt";
+import { OrderStatus } from "../OrderStatus";
+import { Order } from "../Order";
+
+// TODO: send instIds from broker
+const instIds = [
+    "BTCUSDT_SPBL",
+    "ETHUSDT_SPBL",
+    "BNBUSDT_SPBL",
+    "XRPUSDT_SPBL",
+    "ADAUSDT_SPBL",
+    "SOLUSDT_SPBL",
+    "AVAXUSDT_SPBL",
+    "DOTUSDT_SPBL",
+    "DOGEUSDT_SPBL",
+    "SHIBUSDT_SPBL",
+    "MATICUSDT_SPBL",
+    "WBTCUSDT_SPBL",
+    "CROUSDT_SPBL",
+    "DAIUSDT_SPBL",
+    "ATOMUSDT_SPBL",
+    "LTCUSDT_SPBL",
+    "NEARUSDT_SPBL",
+    "LINKUSDT_SPBL",
+    "UNIUSDT_SPBL",
+    "TRXUSDT_SPBL",
+    "FTTUSDT_SPBL",
+    "BCHUSDT_SPBL",
+    "ETCUSDT_SPBL",
+    "MANAUSDT_SPBL",
+    "ICPUSDT_SPBL",
+    "SANDUSDT_SPBL",
+    "EGLDUSDT_SPBL",
+    "FTMUSDT_SPBL",
+    "FILUSDT_SPBL",
+    "APEUSDT_SPBL",
+    "AXSUSDT_SPBL",
+    "KLAYUSDT_SPBL",
+    "RUNEUSDT_SPBL",
+    "HNTUSDT_SPBL",
+    "EOSUSDT_SPBL",
+    "CAKEUSDT_SPBL",
+    "BTTUSDT_SPBL",
+    "AAVEUSDT_SPBL",
+    "MKRUSDT_SPBL",
+    "GRTUSDT_SPBL",
+    "LUNAUSDT_SPBL",
+    "CVXUSDT_SPBL",
+    "NEXOUSDT_SPBL",
+]
 export class BitgetPrivateClient extends BasicPrivateClient {
     protected _pingInterval: NodeJS.Timeout;
 
@@ -124,13 +173,20 @@ export class BitgetPrivateClient extends BasicPrivateClient {
         this._wss.send(
             JSON.stringify({
                 op: "subscribe",
-                args: [
-                    {
+                args: instIds.map((instId) => {
+                    return {
                         channel: "orders",
                         instType: "spbl",
-                        instId: "ETCUSDT_SPBL",
-                    },
-                ],
+                        instId: instId,
+                    }
+                }),
+                // args: [
+                //     {
+                //         channel: "orders",
+                //         instType: "spbl",
+                //         instId: "ETHUSDT_SPBL",
+                //     },
+                // ],
             }),
         );
     }
@@ -140,7 +196,7 @@ export class BitgetPrivateClient extends BasicPrivateClient {
     }
 
     protected _onMessage(raw: string) {
-        console.log(raw);
+        console.log('_onMessage', raw);
 
         /**
          * if no pong in 30 seconds then reconnect
@@ -167,11 +223,84 @@ export class BitgetPrivateClient extends BasicPrivateClient {
             super._onConnected();
         }
 
-        /**
-         * @example {"action":"snapshot","arg":{"instType":"spbl","channel":"orders","instId":"ETCUSDT_SPBL"},"data":[{"instId":"ETCUSDT_SPBL","ordId":"877049591807512576","clOrdId":"68f2ae11-b4e8-4a73-a30a-7ef73734ca2f","px":"5.3221","sz":"1.0000","notional":"5.322100","ordType":"limit","force":"normal","side":"buy","accFillSz":"0.0000","avgPx":"0.0000","status":"new","cTime":1644830838157,"uTime":1644830838157,"orderFee":[]}]}
-         */
         if (arg && arg.channel == "orders" && data) {
-            this.emit("order", data);
+            /**
+             * https://bitgetlimited.github.io/apidoc/en/spot/#order-channel
+             * @example
+{
+    "action":"snapshot",
+    "arg":{
+        "instType":"spbl",
+        "channel":"orders",
+        "instId":"ETCUSDT_SPBL"
+    },
+    "data":[
+        {
+            "instId":"ETCUSDT_SPBL",
+            "ordId":"877049591807512576",
+            "clOrdId":"68f2ae11-b4e8-4a73-a30a-7ef73734ca2f",
+            "px":"5.3221",
+            "sz":"1.0000",
+            "notional":"5.322100",
+            "ordType":"limit",
+            "force":"normal",
+            "side":"buy",
+            "accFillSz":"0.0000",
+            "avgPx":"0.0000",
+            "status":"new",
+            "cTime":1644830838157,
+            "uTime":1644830838157,
+            "orderFee":[{"feeCcy":"USDT","fee":"-0.01006285"}]
+        }
+    ]
+}
+            */
+            for (const d of data) {
+                let status = d.status;
+
+                // map to our status
+                if (status === "new") {
+                    status = OrderStatus.NEW;
+                } else if (status === "partial-fill") {
+                    status = OrderStatus.PARTIALLY_FILLED;
+                } else if (status === "full-fill") {
+                    status = OrderStatus.FILLED;
+                } else if (status === "cancelled") {
+                    status = OrderStatus.CANCELED;
+                } else {
+                    console.log(`not going to update with status ${status}`);
+                    return;
+                }
+
+                const isSell = d.side.toLowerCase() == "sell";
+                const amount = Math.abs(Number(d.sz || 0));
+                const amountFilled = Math.abs(Number(d.accFillSz || 0));
+                const price = Number(d.avgPx || 0) || Number(d.px || 0);
+                let commissionCurrency = null;
+                let commissionAmount = 0;
+                if (Array.isArray(d.orderFee) && d.orderFee.length) {
+                    commissionCurrency = d.orderFee[0].feeCcy;
+                    for (const orderFee of d.orderFee) {
+                        if (orderFee.feeCcy === commissionCurrency) {
+                            commissionAmount += Number(orderFee.fee || 0);
+                        }
+                    }
+                }
+                const change = {
+                    exchange: this.name,
+                    pair: d.instId,
+                    externalOrderId: d.ordId,
+                    status: status,
+                    msg: status,
+                    price: price,
+                    amount: isSell ? -amount : amount,
+                    amountFilled: isSell ? -amountFilled : amountFilled,
+                    commissionAmount: commissionAmount,
+                    commissionCurrency: commissionCurrency,
+                } as Order;
+
+                this.emit("orders", change);
+            }
         }
 
         // {"action":"push","ch":"orders#*","data":{"orderSource":"spot-web","orderCreateTime":1644823806980,"accountId":46333987,"orderPrice":"0.53181","orderSize":"9.964","symbol":"adausdt","type":"buy-limit","orderId":472952725417169,"eventType":"creation","clientOrderId":"","orderStatus":"submitted"}}

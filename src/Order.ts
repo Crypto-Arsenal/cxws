@@ -10,5 +10,5 @@ export type Order = {
     amount: number;
     amountFilled: number;
     commissionAmount: number;
-    commissionCurrency: number;
+    commissionCurrency: string;
 };
