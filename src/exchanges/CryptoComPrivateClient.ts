@@ -241,7 +241,6 @@ export class CryptoComPrivateClient extends BasicPrivateClient {
 
                 this.emit("orders", change);
             }
-            this.emit("orders", result.data);
         }
     }
 }
