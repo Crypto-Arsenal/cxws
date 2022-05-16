@@ -265,7 +265,7 @@ export class OkexPrivateClient extends BasicPrivateClient {
                 const change = {
                     exchange: this.name,
                     pair: d.instId,
-                    externalOrderId: d.ordId || d.clOrdId,
+                    exchangeOrderId: d.ordId || d.clOrdId,
                     status: status,
                     msg: status,
                     price: price,

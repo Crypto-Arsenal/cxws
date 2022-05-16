@@ -229,7 +229,7 @@ export class CryptoComPrivateClient extends BasicPrivateClient {
                 const change = {
                     exchange: this.name,
                     pair: d.instrument_name,
-                    externalOrderId: d.order_id,
+                    exchangeOrderId: d.order_id,
                     status: status,
                     msg: status,
                     price: price,

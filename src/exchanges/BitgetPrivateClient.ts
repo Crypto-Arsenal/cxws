@@ -289,7 +289,7 @@ export class BitgetPrivateClient extends BasicPrivateClient {
                 const change = {
                     exchange: this.name,
                     pair: d.instId,
-                    externalOrderId: d.ordId,
+                    exchangeOrderId: d.ordId,
                     status: status,
                     msg: status,
                     price: price,

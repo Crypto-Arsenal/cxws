@@ -406,7 +406,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
             const change = {
                 exchange: this.name,
                 pair: symbol,
-                externalOrderId: orderId,
+                exchangeOrderId: orderId,
                 status: status,
                 msg: status,
                 price: price,

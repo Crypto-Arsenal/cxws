@@ -161,7 +161,7 @@ export class HuobiPrivateBase extends BasicPrivateClient {
             const change = {
                 exchange: this.name,
                 pair: data.symbol,
-                externalOrderId: data.orderId || data.clientOrderId,
+                exchangeOrderId: data.orderId || data.clientOrderId,
                 status: status,
                 msg: status,
                 price: price,

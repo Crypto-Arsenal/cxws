@@ -226,7 +226,7 @@ export class FtxPrivateBaseClient extends BasicPrivateClient {
                 this.emit("orders", {
                     exchange: "Ftx",
                     pair: data.market,
-                    externalOrderId: data.id,
+                    exchangeOrderId: data.id,
                     status: orderStatus,
                     msg: orderStatus,
                     price: price,
@@ -241,7 +241,7 @@ export class FtxPrivateBaseClient extends BasicPrivateClient {
                 this.emit("orders", {
                     exchange: this.name,
                     pair: data.market,
-                    externalOrderId: data.orderId,
+                    exchangeOrderId: data.orderId,
                     status: orderStatus,
                     msg: orderStatus,
                     price: price,
