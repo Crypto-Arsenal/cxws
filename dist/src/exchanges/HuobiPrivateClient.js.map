@@ -1,0 +1,1 @@
+{"version":3,"file":"HuobiPrivateClient.js","sourceRoot":"","sources":["../../../src/exchanges/HuobiPrivateClient.ts"],"names":[],"mappings":";;;AACA,yDAAsD;AAEtD,MAAa,kBAAmB,SAAQ,mCAAgB;IACpD,YAAY,EACR,OAAO,GAAG,2BAA2B,EACrC,SAAS,EACT,MAAM,EACN,SAAS,MACa,EAAE;QACxB,KAAK,CAAC,EAAE,IAAI,EAAE,OAAO,EAAE,OAAO,EAAE,SAAS,EAAE,MAAM,EAAE,SAAS,EAAE,CAAC,CAAC;IACpE,CAAC;CACJ;AATD,gDASC"}
