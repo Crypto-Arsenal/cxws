@@ -286,6 +286,8 @@ export class BitgetPrivateClient extends BasicPrivateClient {
                         }
                     }
                 }
+                // FeeNegative number represents the user transaction fee charged by the platform.Positive number represents rebate.
+                commissionAmount = -commissionAmount;
                 const change = {
                     exchange: this.name,
                     pair: d.instId,
