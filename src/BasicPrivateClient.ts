@@ -127,7 +127,7 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
         map: PrivateChannelSubscriptionMap,
         sendFn: SendFn,
     ) {
-        console.log("base _subscribe");
+        console.log("base", "_subscribe");
         this._connect();
         const sub_id = channelSub.id;
         if (!map.has(sub_id)) {
@@ -155,6 +155,7 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
         map: PrivateChannelSubscriptionMap,
         sendFn: SendFn,
     ) {
+        console.log("base", "_unsubscribe");
         const sub_id = channel_sub.id;
         if (map.has(sub_id)) {
             map.delete(sub_id);
@@ -172,7 +173,7 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
      * have no effect.
      */
     protected _connect() {
-        console.log("base _connect", this._wss, this.getWssPath(), this.wssPath);
+        console.log("base", "_connect", this._wss, this.getWssPath(), this.wssPath);
         if (!this._wss) {
             // register wss hanlder here
             // wss could be overwritten on the fly
@@ -204,6 +205,7 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
      * @param {Error} err
      */
     protected _onError(err) {
+        console.log("base", "_onError");
         this.emit("error", err);
     }
 
@@ -213,7 +215,6 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
      */
     protected _onConnecting() {
         console.log("base", "_onConnecting");
-
         this.emit("connecting");
     }
 
@@ -225,7 +226,6 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
      */
     protected _onConnected() {
         console.log("base", "_onConnected");
-
         this.emit("connected");
         for (const [subscriptionId, channel] of this._privateOrderSubs) {
             this._sendSubPrivateOrders(subscriptionId, channel);
@@ -238,6 +238,7 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
      * Handles a disconnection event
      */
     protected _onDisconnected() {
+        console.log("base", "_onDisconnected");
         this._watcher.stop();
         this.emit("disconnected");
     }
@@ -246,6 +247,7 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
      * Handles the closing event
      */
     protected _onClosing() {
+        console.log("base", "_onClosing");
         this._watcher.stop();
         this.emit("closing");
     }
@@ -254,7 +256,7 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
      * Fires before connect
      */
     protected _beforeConnect() {
-        console.log("base", "beforeconnect");
+        console.log("base", "_beforeConnect");
         //
     }
 
@@ -262,6 +264,7 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
      * Fires before close
      */
     protected _beforeClose() {
+        console.log("base", "_beforeClose");
         //
     }
 
@@ -269,6 +272,7 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
      * Handles the closed event
      */
     protected _onClosed() {
+        console.log("base", "_onClosed");
         this.emit("closed");
     }
 
