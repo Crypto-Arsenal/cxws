@@ -12,6 +12,8 @@ import {
 import * as https from "../Https";
 import ccxt from "ccxt";
 import { PrivateClientOptions } from "../PrivateClientOptions";
+import { OrderStatus } from "../OrderStatus";
+import { Order } from "../Order";
 
 export type KrakenClientOptions = PrivateClientOptions & {
     autoloadSymbolMaps?: boolean;
@@ -218,7 +220,8 @@ export class KrakenPrivateClient extends BasicPrivateClient {
     id is used to look up the subscription details in the subscriptionLog
     to determine what the message means.
    */
-    protected _processsMessage(msg: any) {
+    protected async _processsMessage(msg: any) {
+        console.log('_processsMessage', msg)
         if (msg.event === "heartbeat") {
             return;
         }
@@ -253,29 +256,56 @@ export class KrakenPrivateClient extends BasicPrivateClient {
             return;
         }
 
-        const [subscriptionId, details] = msg;
-        console.log(JSON.stringify(subscriptionId), details);
-        return;
+        const [dictionary, channelName] = msg;
+        if (channelName == 'openOrders') {
+            for (const e of dictionary) {
+                for (const [orderId, order] of Object.entries(e) as [string, any]) {
+                    console.log(orderId, order);
+                    if (order?.status == 'pending') {
+                        console.log(`not going to update with status ${order?.status}`);
+                        break;
+                    }
+                    const fetchedOrder = await this.ccxt.fetchOrder(orderId, '');
+                    console.log('fetchedOrder', fetchedOrder);
 
-        const sl = this.subscriptionLog.get(subscriptionId);
+                    const isSell = fetchedOrder.type.substring(0, 4).toLowerCase() == "sell";
+                    let amount = Math.abs(Number(fetchedOrder.amount || 0));
+                    const amountFilled = Math.abs(Number(fetchedOrder.filled || 0));
+                    const price = Number(fetchedOrder.average || 0) || Number(fetchedOrder.price || 0);
+                    let status: any = fetchedOrder.status;
+                    // map to our status
+                    if (status === "open") {
+                        if (amountFilled != 0) {
+                            status = OrderStatus.PARTIALLY_FILLED;
+                        } else {
+                            status = OrderStatus.NEW;
+                        }
+                    } else if (status === "closed") {
+                        status = OrderStatus.FILLED;
+                    } else if (status === "canceled") {
+                        status = OrderStatus.CANCELED;
+                    } else {
+                        // SKIP rejected
+                        console.log(`not going to update with status ${status}`);
+                        return;
+                    }
 
-        // If we don't have a subscription log entry for this event then
-        // we need to abort since we don't know what to do with it!
+                    const change = {
+                        exchange: this.name,
+                        pair: fetchedOrder.symbol,
+                        exchangeOrderId: fetchedOrder.id,
+                        status: status,
+                        msg: status,
+                        price: price,
+                        amount: isSell ? -amount : amount,
+                        amountFilled: isSell ? -amountFilled : amountFilled,
+                        commissionAmount: Number(fetchedOrder.fee.cost),
+                        commissionCurrency: fetchedOrder.fee.currency,
+                    } as Order;
 
-        // From the subscriptionLog entry's pair, we can convert
-        // the ws symbol into a rest symbol
-        const remote_id = this.fromWsMap.get(sl.pair);
-
-        // private orders
-        if (sl.subscription.name === "openOrders") {
-            const market = this._privateOrderSubs.get(remote_id);
-            if (!market) return;
-            this.emit("orders", details, market);
-
-            // const ticker = this._constructTicker(details, market);
-            // if (ticker) {
-            // }
-            return;
+                    this.emit("orders", change);
+                }
+            }
         }
     }
 }
