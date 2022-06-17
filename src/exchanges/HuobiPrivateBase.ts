@@ -17,7 +17,13 @@ export class HuobiPrivateBase extends BasicPrivateClient {
 
     protected _sendPong(ts: number) {
         if (this._wss) {
-            this._wss.send(JSON.stringify({ pong: ts }));
+            const msg = {
+                "action": "pong",
+                "data": {
+                    "ts": ts,
+                }
+            };
+            this._wss.send(JSON.stringify(msg));
         }
     }
 
@@ -87,8 +93,8 @@ export class HuobiPrivateBase extends BasicPrivateClient {
 
         let msgs = JSON.parse(raw);
         // handle pongs
-        if (msgs.ping) {
-            this._sendPong(msgs.ping);
+        if (msgs.action == 'ping') {
+            this._sendPong(msgs.data.ts);
             return;
         }
 
