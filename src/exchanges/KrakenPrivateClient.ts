@@ -268,7 +268,7 @@ export class KrakenPrivateClient extends BasicPrivateClient {
                     const fetchedOrder = await this.ccxt.fetchOrder(orderId, '');
                     console.log('fetchedOrder', fetchedOrder);
 
-                    const isSell = fetchedOrder.type.substring(0, 4).toLowerCase() == "sell";
+                    const isSell = fetchedOrder.side.toLowerCase() == "sell";
                     let amount = Math.abs(Number(fetchedOrder.amount || 0));
                     const amountFilled = Math.abs(Number(fetchedOrder.filled || 0));
                     const price = Number(fetchedOrder.average || 0) || Number(fetchedOrder.price || 0);
