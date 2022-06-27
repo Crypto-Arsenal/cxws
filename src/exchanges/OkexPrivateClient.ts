@@ -255,7 +255,7 @@ export class OkexPrivateClient extends BasicPrivateClient {
                     status = OrderStatus.CANCELED;
                 } else {
                     console.log(`not going to update with status ${status}`);
-                    return;
+                    continue;
                 }
 
                 const isSell = d.side.substring(0, 4).toLowerCase() == "sell";

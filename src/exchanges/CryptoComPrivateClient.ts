@@ -193,7 +193,7 @@ export class CryptoComPrivateClient extends BasicPrivateClient {
                 } else {
                     // REJECTED or EXPIRED
                     console.log(`not going to update with status ${status}`);
-                    return;
+                    continue;
                 }
 
                 const feeRate = 0.004;// https://crypto.com/exchange/document/fees-limits

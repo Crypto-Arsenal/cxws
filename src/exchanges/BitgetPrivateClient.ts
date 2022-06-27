@@ -269,7 +269,7 @@ export class BitgetPrivateClient extends BasicPrivateClient {
                     status = OrderStatus.CANCELED;
                 } else {
                     console.log(`not going to update with status ${status}`);
-                    return;
+                    continue;
                 }
 
                 const isSell = d.side.toLowerCase() == "sell";

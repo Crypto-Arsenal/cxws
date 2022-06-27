@@ -263,9 +263,15 @@ export class KrakenPrivateClient extends BasicPrivateClient {
                     console.log(orderId, order);
                     if (order?.status == 'pending') {
                         console.log(`not going to update with status ${order?.status}`);
-                        break;
+                        continue;
                     }
-                    const fetchedOrder = await this.ccxt.fetchOrder(orderId, '');
+                    let fetchedOrder;
+                    try {
+                        fetchedOrder = await this.ccxt.fetchOrder(orderId, '');
+                    } catch (err) {
+                        console.log('fetchOrder error', err);
+                        continue;
+                    }
                     console.log('fetchedOrder', fetchedOrder);
 
                     const isSell = fetchedOrder.side.toLowerCase() == "sell";
@@ -287,7 +293,7 @@ export class KrakenPrivateClient extends BasicPrivateClient {
                     } else {
                         // SKIP rejected
                         console.log(`not going to update with status ${status}`);
-                        return;
+                        continue;
                     }
 
                     const change = {
