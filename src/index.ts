@@ -20,7 +20,9 @@ import { BiboxClient } from "./exchanges/BiboxClient";
 import { BinanceClient } from "./exchanges/BinanceClient";
 import { BinancePrivateClient } from "./exchanges/BinancePrivateClient";
 import { BinanceFuturesCoinmClient } from "./exchanges/BinanceFuturesCoinmClient";
+import { BinanceFuturesCoinmPrivateClient } from "./exchanges/BinanceFuturesCoinmPrivateClient";
 import { BinanceFuturesUsdtmClient } from "./exchanges/BinanceFuturesUsdtmClient";
+import { BinanceFuturesUsdtmPrivateClient } from "./exchanges/BinanceFuturesUsdtmPrivateClient";
 import { BinanceJeClient } from "./exchanges/BinanceJeClient";
 import { BinanceUsClient } from "./exchanges/BinanceUsClient";
 import { BitfinexClient } from "./exchanges/BitfinexClient";
@@ -216,7 +218,9 @@ export {
     BinanceClient,
     BinancePrivateClient,
     BinanceFuturesCoinmClient,
+    BinanceFuturesCoinmPrivateClient,
     BinanceFuturesUsdtmClient,
+    BinanceFuturesUsdtmPrivateClient,
     BinanceJeClient,
     BinanceUsClient,
     BitfinexClient,
@@ -267,7 +271,9 @@ export default {
     Binance: BinanceClient,
     BinancePrivate: BinancePrivateClient,
     BinanceFuturesCoinM: BinanceFuturesCoinmClient,
+    BinanceFuturesCoinMPrivate: BinanceFuturesCoinmPrivateClient,
     BinanceFuturesUsdtM: BinanceFuturesUsdtmClient,
+    BinanceFuturesUsdtMPrivate: BinanceFuturesUsdtmPrivateClient,
     BinanceJe: BinanceJeClient,
     BinanceUs: BinanceUsClient,
     Bitfinex: BitfinexClient,
