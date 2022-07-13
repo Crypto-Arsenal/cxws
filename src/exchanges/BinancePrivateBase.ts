@@ -45,6 +45,7 @@ import { PrivateClientOptions } from "../PrivateClientOptions";
 import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
 import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
+const JSONbig = require('json-bigint');
 
 export type BinancePrivateClientOptions = PrivateClientOptions & {
     name?: ccxt.ExchangeId;
@@ -278,7 +279,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
     protected _onMessage(raw: string) {
         console.log('_onMessage', raw);
 
-        const msg = JSON.parse(raw);
+        const msg = JSONbig.parse(raw);
         // subscribe/unsubscribe responses
         if (msg.result === null && msg.id) {
             // console.log(msg);
@@ -352,6 +353,102 @@ export class BinancePrivateBase extends BasicPrivateClient {
                 n: commissionAmount,
                 N: commissionCurrency,
             } = msg.data;
+
+            // map to our status
+            if (status === "NEW") {
+                status = OrderStatus.NEW;
+            } else if (status === "PARTIALLY_FILLED") {
+                status = OrderStatus.PARTIALLY_FILLED;
+            } else if (status === "FILLED") {
+                status = OrderStatus.FILLED;
+            } else if (status === "CANCELED" || status === "EXPIRED") {
+                status = OrderStatus.CANCELED;
+            } else {
+                // SKIP REJECTED and PENDING_CANCEL
+                console.log(`not going to update with status ${status}`);
+                return;
+            }
+
+            const isSell = side.toUpperCase() == "SELL";
+            amount = Math.abs(Number(amount || 0));
+            amountFilled = Math.abs(Number(amountFilled || 0));
+            const price = Number(lastExecutedPrice || 0) || Number(orderPrice || 0);
+            const change = {
+                exchange: this.name,
+                pair: symbol,
+                exchangeOrderId: orderId,
+                status: status,
+                msg: status,
+                price: price,
+                amount: isSell ? -amount : amount,
+                amountFilled: isSell ? -amountFilled : amountFilled,
+                commissionAmount: commissionAmount,
+                commissionCurrency: commissionCurrency,
+            } as Order;
+
+            this.emit("orders", change);
+        } else if (msg.data.e === "ORDER_TRADE_UPDATE") {
+            /**
+             * https://binance-docs.github.io/apidocs/futures/en/#event-order-update
+             * @example
+{
+  "e":"ORDER_TRADE_UPDATE",     // Event Type
+  "E":1568879465651,            // Event Time
+  "T":1568879465650,            // Transaction Time
+  "o":{
+    "s":"BTCUSDT",              // Symbol
+    "c":"TEST",                 // Client Order Id
+      // special client order id:
+      // starts with "autoclose-": liquidation order
+      // "adl_autoclose": ADL auto close order
+      // "settlement_autoclose-": settlement order for delisting or delivery
+    "S":"SELL",                 // Side
+    "o":"TRAILING_STOP_MARKET", // Order Type
+    "f":"GTC",                  // Time in Force
+    "q":"0.001",                // Original Quantity
+    "p":"0",                    // Original Price
+    "ap":"0",                   // Average Price
+    "sp":"7103.04",             // Stop Price. Please ignore with TRAILING_STOP_MARKET order
+    "x":"NEW",                  // Execution Type
+    "X":"NEW",                  // Order Status
+    "i":8886774,                // Order Id
+    "l":"0",                    // Order Last Filled Quantity
+    "z":"0",                    // Order Filled Accumulated Quantity
+    "L":"0",                    // Last Filled Price
+    "N":"USDT",             // Commission Asset, will not push if no commission
+    "n":"0",                // Commission, will not push if no commission
+    "T":1568879465650,          // Order Trade Time
+    "t":0,                      // Trade Id
+    "b":"0",                    // Bids Notional
+    "a":"9.91",                 // Ask Notional
+    "m":false,                  // Is this trade the maker side?
+    "R":false,                  // Is this reduce only
+    "wt":"CONTRACT_PRICE",      // Stop Price Working Type
+    "ot":"TRAILING_STOP_MARKET",    // Original Order Type
+    "ps":"LONG",                        // Position Side
+    "cp":false,                     // If Close-All, pushed with conditional order
+    "AP":"7476.89",             // Activation Price, only puhed with TRAILING_STOP_MARKET order
+    "cr":"5.0",                 // Callback Rate, only puhed with TRAILING_STOP_MARKET order
+    "pP": false,              // ignore
+    "si": 0,                  // ignore
+    "ss": 0,                  // ignore
+    "rp":"0"                            // Realized Profit of the trade
+  }
+}
+             */
+            let {
+                x: executionType,
+                s: symbol,
+                q: amount,
+                z: amountFilled,
+                S: side,
+                p: orderPrice,
+                i: orderId,
+                X: status,
+                L: lastExecutedPrice,
+                n: commissionAmount,
+                N: commissionCurrency,
+            } = msg.data.o;
 
             // map to our status
             if (status === "NEW") {

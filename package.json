@@ -24,6 +24,7 @@
   },
   "repository": "alanwu4321/cxws",
   "dependencies": {
+    "@types/json-bigint": "^1.0.1",
     "axios": "^0.25.0",
     "ccxt": "1.86.4",
     "crc": "^3.8.0",
