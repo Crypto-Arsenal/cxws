@@ -18,8 +18,8 @@ export class BinanceFuturesCoinmPrivateClient extends BinancePrivateBase {
         apiSecret = "",
     }: BinancePrivateClientOptions = {}) {
         if (testNet) {
-            wssPath = "wss://testnet.binance.vision/stream";
-            restL2SnapshotPath = "https://testnet.binance.vision/api/v1/depth";
+            wssPath = "wss://dstream.binancefuture.com/stream";
+            restL2SnapshotPath = "https://testnet.binancefuture.com/api/v1/depth";
         }
         super({
             name: "binancecoinm",
@@ -37,5 +37,36 @@ export class BinanceFuturesCoinmPrivateClient extends BinancePrivateBase {
             apiKey,
             apiSecret,
         });
+    }
+
+    /**
+     * Set webscoket token from REST api before subscribing to private feeds
+     * https://binance-docs.github.io/apidocs/spot/en/#user-data-streams
+     * TODO: SEE HOW KUOCOIN DOES IT!!!
+     */
+    protected _connect(): void {
+        this.ccxt
+            .dapiPrivatePostListenKey()
+            .then(d => {
+                if (d.listenKey) {
+                    this.apiToken = d.listenKey;
+                    this.dynamicWssPath = `${this.wssPath}?streams=${this.apiToken}`;
+                    setTimeout(function userDataKeepAlive() {
+                        // keepalive
+                        try {
+                            this.ccxt
+                                .dapiPrivatePutListenKey({ listenKey: this.apiToken })
+                                .then(d => setTimeout(userDataKeepAlive, 60 * 30 * 1000))
+                                .catch(err => setTimeout(userDataKeepAlive, 60000));
+                        } catch (error) {
+                            setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
+                        }
+                    }, 60 * 30 * 1000); // 30 minute keepalive
+                }
+                super._connect();
+            })
+            .catch(err => {
+                this.emit("error", err);
+            });
     }
 }

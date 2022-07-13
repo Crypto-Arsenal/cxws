@@ -66,8 +66,8 @@ import { BasicPrivateClient, PrivateChannelSubscription } from "./BasicPrivateCl
 
 export const PrivateWSClient: { [key in string]: any } = {
     binance: BinancePrivateClient,
-    binanceCoinm: BinanceFuturesCoinmPrivateClient,
-    binanceUsdm: BinanceFuturesUsdtmPrivateClient,
+    binancecoinm: BinanceFuturesCoinmPrivateClient,
+    binanceusdm: BinanceFuturesUsdtmPrivateClient,
     bitget: BitgetPrivateClient,
     cryptocom: CryptoComPrivateClient,
     ftx: FtxPrivateClient,
