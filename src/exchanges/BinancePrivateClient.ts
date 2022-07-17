@@ -51,11 +51,12 @@ export class BinancePrivateClient extends BinancePrivateBase {
                 if (d.listenKey) {
                     this.apiToken = d.listenKey;
                     this.dynamicWssPath = `${this.wssPath}?streams=${this.apiToken}`;
+                    const that = this;
                     setTimeout(function userDataKeepAlive() {
                         // keepalive
                         try {
-                            this.ccxt
-                                .publicPutUserDataStream({ listenKey: this.apiToken })
+                            that.ccxt
+                                .publicPutUserDataStream({ listenKey: that.apiToken })
                                 .then(d => setTimeout(userDataKeepAlive, 60 * 30 * 1000))
                                 .catch(err => setTimeout(userDataKeepAlive, 60000));
                         } catch (error) {
