@@ -63,5 +63,5 @@ test*.ts
 .vscode
 **/.DS_Store
 
-dist
+# dist
 coverage

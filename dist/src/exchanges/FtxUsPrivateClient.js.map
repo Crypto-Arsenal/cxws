@@ -1,0 +1,1 @@
+{"version":3,"file":"FtxUsPrivateClient.js","sourceRoot":"","sources":["../../../src/exchanges/FtxUsPrivateClient.ts"],"names":[],"mappings":";;;AAGA,qDAAwD;AAExD,MAAa,kBAAmB,SAAQ,qCAAoB;IACxD,YAAY,EACR,OAAO,GAAG,iBAAiB,EAC3B,SAAS,EACT,MAAM,EACN,SAAS,MACa,EAAE;QACxB,KAAK,CAAC,EAAE,IAAI,EAAE,OAAO,EAAE,MAAM,EAAE,SAAS,EAAE,OAAO,EAAE,SAAS,EAAE,CAAC,CAAC;IACpE,CAAC;CACJ;AATD,gDASC"}
