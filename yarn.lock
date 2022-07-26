@@ -350,11 +350,6 @@
   resolved "https://registry.yarnpkg.com/@types/http-cache-semantics/-/http-cache-semantics-4.0.1.tgz#0ea7b61496902b95890dc4c3a116b60cb8dae812"
   integrity sha512-SZs7ekbP8CN0txVG2xVRH6EgKmEm31BOxA07vkFaETzZz1xh+cbt8BcI0slpymvwhx5dlFnQG2rTlPVQn+iRPQ==
 
-"@types/json-bigint@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@types/json-bigint/-/json-bigint-1.0.1.tgz#201062a6990119a8cc18023cfe1fed12fc2fc8a7"
-  integrity sha512-zpchZLNsNuzJHi6v64UBoFWAvQlPhch7XAi36FkH6tL1bbbmimIF+cS7vwkzY4u5RaSWMoflQfu+TshMPPw8uw==
-
 "@types/json-schema@^7.0.7":
   version "7.0.9"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.9.tgz#97edc9037ea0c38585320b28964dde3b39e4660d"
@@ -754,10 +749,10 @@ caniuse-lite@^1.0.30001286:
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001302.tgz#da57ce61c51177ef3661eeed7faef392d3790aaa"
   integrity sha512-YYTMO+tfwvgUN+1ZnRViE53Ma1S/oETg+J2lISsqi/ZTNThj3ZYBOKP2rHwJc37oCsPqAzJ3w2puZHn0xlLPPw==
 
-ccxt@1.86.4:
-  version "1.86.4"
-  resolved "https://registry.yarnpkg.com/ccxt/-/ccxt-1.86.4.tgz#d41fb0ed5ed88f92bc6d9117c559d9df0bd58c89"
-  integrity sha512-L/N6ekHIvTaZ6Iwqdb/NKrRmfwTJEtNp3AgUAEbtNeQfx7doKTyDSgVREBJFiDTvPntCwM+eYyLY8VA46jD8iQ==
+ccxt@1.91.26:
+  version "1.91.26"
+  resolved "https://registry.yarnpkg.com/ccxt/-/ccxt-1.91.26.tgz#91021992271e81f93f15533763be33d9a8036179"
+  integrity sha512-P4xh5lQydBlNVYOF9Q7/WEH2NTaG7VQHfj0nEtBHP2kSN0j7D5ke5HE/PYlrOJXa6Knw9yaOHJIBfajYl1l03Q==
 
 chai@^4.3.4:
   version "4.3.5"
