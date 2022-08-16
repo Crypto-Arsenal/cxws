@@ -12,6 +12,7 @@ import { PrivateClientOptions } from "../PrivateClientOptions";
 import { base64Encode, hmacSign } from "../Jwt";
 import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
+import { InvestmentType } from "../types";
 
 const pongBuffer = Buffer.from("pong");
 
@@ -59,18 +60,45 @@ export class OkexPrivateClient extends BasicPrivateClient {
         this._sendMessage = throttle(this.__sendMessage.bind(this), sendThrottleMs);
     }
 
+    /**
+     *
+     * @param subscriptionId
+     * @param channel
+     * @see https://www.okx.com/docs-v5/en/#websocket-api-private-channel-order-channel
+     */
     protected _sendSubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription) {
-        this._wss.send(
-            JSON.stringify({
-                op: "subscribe",
-                args: [
-                    {
-                        channel: "orders",
-                        instType: "SPOT",
-                    },
-                ],
-            }),
-        );
+        const investmentType = channel.options?.investmentType;
+        if (investmentType == undefined || investmentType == InvestmentType.SPOT) {
+            this._wss.send(
+                JSON.stringify({
+                    op: "subscribe",
+                    args: [
+                        {
+                            channel: "orders",
+                            instType: "SPOT",
+                        },
+                    ],
+                }),
+            );
+        }
+
+        if (
+            investmentType == undefined ||
+            investmentType == InvestmentType.USD_M_FUTURES ||
+            investmentType == InvestmentType.COIN_M_FUTURES
+        ) {
+            this._wss.send(
+                JSON.stringify({
+                    op: "subscribe",
+                    args: [
+                        {
+                            channel: "orders",
+                            instType: "SWAP",
+                        },
+                    ],
+                }),
+            );
+        }
     }
     protected _sendUnsubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription) {
         throw new Error("Method not implemented.");
@@ -140,7 +168,7 @@ export class OkexPrivateClient extends BasicPrivateClient {
     }
 
     protected _onMessage(raw) {
-        console.log('_onMessage', raw);
+        console.log("_onMessage", raw);
 
         // process JSON message
         try {
@@ -280,6 +308,5 @@ export class OkexPrivateClient extends BasicPrivateClient {
                 this.emit("orders", change);
             }
         }
-
     }
 }

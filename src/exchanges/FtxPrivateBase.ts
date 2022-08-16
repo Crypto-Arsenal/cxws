@@ -154,7 +154,7 @@ export class FtxPrivateBaseClient extends BasicPrivateClient {
     protected _sendUnsubLevel3Updates = NotImplementedFn;
 
     protected _onMessage(raw) {
-        console.log('_onMessage', raw);
+        console.log("_onMessage", raw);
 
         const { type, channel, data, msg } = JSON.parse(raw);
         if (!type) {
@@ -162,6 +162,10 @@ export class FtxPrivateBaseClient extends BasicPrivateClient {
         }
 
         if (type == "error") {
+            // {"type":"error","code":400,"msg":"Already subscribed"}
+            if (msg == "Already subscribed") {
+                return;
+            }
             this.emit("error", msg);
             this._wss.close();
             return;

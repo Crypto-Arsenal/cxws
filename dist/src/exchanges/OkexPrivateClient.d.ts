@@ -33,6 +33,12 @@ export declare class OkexPrivateClient extends BasicPrivateClient {
     protected _sendMessage: CancelableFn;
     protected _pingInterval: NodeJS.Timeout;
     constructor({ wssPath, watcherMs, apiKey, apiSecret, apiPassword, sendThrottleMs, }?: OkexClientOptions);
+    /**
+     *
+     * @param subscriptionId
+     * @param channel
+     * @see https://www.okx.com/docs-v5/en/#websocket-api-private-channel-order-channel
+     */
     protected _sendSubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription): void;
     protected _sendUnsubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription): void;
     protected _beforeClose(): void;

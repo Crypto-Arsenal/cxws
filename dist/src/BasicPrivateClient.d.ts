@@ -4,9 +4,11 @@ import { IPrivateClient } from "./IPrivateClient";
 import { SmartWss } from "./SmartWss";
 import { Watcher } from "./Watcher";
 import ccxt from "ccxt";
+import { InvestmentType } from "./types";
 export declare type PrivateChannelSubscription = {
     id: string;
     name: string;
+    options?: any;
 };
 export declare type PrivateChannelSubscriptionMap = Map<string, PrivateChannelSubscription>;
 export declare type WssFactoryFn = (path: string) => SmartWss;
@@ -38,9 +40,15 @@ export declare abstract class BasicPrivateClient extends EventEmitter implements
     reconnect(): void;
     subscribePrivateOrders(channel_sub: {
         id: string;
+        options?: {
+            investmentType: InvestmentType;
+        };
     }): boolean;
     unsubscribePrivateOrders(channel_sub: {
         id: string;
+        options?: {
+            investmentType: InvestmentType;
+        };
     }): Promise<void>;
     /**
      * Helper function for performing a subscription operation

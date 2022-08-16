@@ -10,6 +10,7 @@ const BasicPrivateClient_1 = require("../BasicPrivateClient");
 const Throttle_1 = require("../flowcontrol/Throttle");
 const Jwt_1 = require("../Jwt");
 const OrderStatus_1 = require("../OrderStatus");
+const types_1 = require("../types");
 const pongBuffer = Buffer.from("pong");
 /**
  * Implements OKEx V3 WebSocket API as defined in
@@ -38,16 +39,38 @@ class OkexPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
         this.hasPrivateOrders = true;
         this._sendMessage = (0, Throttle_1.throttle)(this.__sendMessage.bind(this), sendThrottleMs);
     }
+    /**
+     *
+     * @param subscriptionId
+     * @param channel
+     * @see https://www.okx.com/docs-v5/en/#websocket-api-private-channel-order-channel
+     */
     _sendSubPrivateOrders(subscriptionId, channel) {
-        this._wss.send(JSON.stringify({
-            op: "subscribe",
-            args: [
-                {
-                    channel: "orders",
-                    instType: "SPOT",
-                },
-            ],
-        }));
+        const investmentType = channel.options?.investmentType;
+        if (investmentType == undefined || investmentType == types_1.InvestmentType.SPOT) {
+            this._wss.send(JSON.stringify({
+                op: "subscribe",
+                args: [
+                    {
+                        channel: "orders",
+                        instType: "SPOT",
+                    },
+                ],
+            }));
+        }
+        if (investmentType == undefined ||
+            investmentType == types_1.InvestmentType.USD_M_FUTURES ||
+            investmentType == types_1.InvestmentType.COIN_M_FUTURES) {
+            this._wss.send(JSON.stringify({
+                op: "subscribe",
+                args: [
+                    {
+                        channel: "orders",
+                        instType: "SWAP",
+                    },
+                ],
+            }));
+        }
     }
     _sendUnsubPrivateOrders(subscriptionId, channel) {
         throw new Error("Method not implemented.");
@@ -102,7 +125,7 @@ class OkexPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
         this._wss.send(msg);
     }
     _onMessage(raw) {
-        console.log('_onMessage', raw);
+        console.log("_onMessage", raw);
         // process JSON message
         try {
             if (raw == "pong") {

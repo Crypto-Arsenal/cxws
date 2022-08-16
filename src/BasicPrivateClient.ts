@@ -4,10 +4,12 @@ import { IPrivateClient } from "./IPrivateClient";
 import { SmartWss } from "./SmartWss";
 import { Watcher } from "./Watcher";
 import ccxt from "ccxt";
+import { InvestmentType } from "./types";
 
 export type PrivateChannelSubscription = {
     id: string;
     name: string;
+    options?: any;
 };
 
 export type PrivateChannelSubscriptionMap = Map<string, PrivateChannelSubscription>;
@@ -84,7 +86,10 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
         }
     }
 
-    public subscribePrivateOrders(channel_sub: { id: string }) {
+    public subscribePrivateOrders(channel_sub: {
+        id: string;
+        options?: { investmentType: InvestmentType };
+    }) {
         console.log("base subscribePrivateOrders");
         if (!this.hasPrivateOrders) return;
         return this._subscribe(
@@ -97,7 +102,10 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
         );
     }
 
-    public unsubscribePrivateOrders(channel_sub: { id: string }): Promise<void> {
+    public unsubscribePrivateOrders(channel_sub: {
+        id: string;
+        options?: { investmentType: InvestmentType };
+    }): Promise<void> {
         if (!this.hasPrivateOrders) return;
         this._unsubscribe(
             {

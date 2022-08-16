@@ -117,12 +117,16 @@ class FtxPrivateBaseClient extends BasicPrivateClient_1.BasicPrivateClient {
         }));
     }
     _onMessage(raw) {
-        console.log('_onMessage', raw);
+        console.log("_onMessage", raw);
         const { type, channel, data, msg } = JSON.parse(raw);
         if (!type) {
             return;
         }
         if (type == "error") {
+            // {"type":"error","code":400,"msg":"Already subscribed"}
+            if (msg == "Already subscribed") {
+                return;
+            }
             this.emit("error", msg);
             this._wss.close();
             return;
