@@ -42,6 +42,7 @@ const https = __importStar(require("../Https"));
 const ccxt_1 = __importDefault(require("ccxt"));
 const BasicPrivateClient_1 = require("../BasicPrivateClient");
 const OrderStatus_1 = require("../OrderStatus");
+const OrderEvent_1 = require("../OrderEvent");
 const JSONbig = require('json-bigint');
 class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
     constructor({ name = "binance", wssPath, restL2SnapshotPath, watcherMs = 30000, useAggTrades = true, requestSnapshot = true, socketBatchSize = 200, socketThrottleMs = 1000, restThrottleMs = 1000, l2updateSpeed = "", l2snapshotSpeed = "", batchTickers = true, apiKey = "", apiSecret = "", } = {}) {
@@ -275,6 +276,7 @@ class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
                 pair: symbol,
                 exchangeOrderId: orderId,
                 status: status,
+                event: null,
                 msg: status,
                 price: price,
                 amount: isSell ? -amount : amount,
@@ -333,7 +335,7 @@ class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
   }
 }
              */
-            let { x: executionType, s: symbol, q: amount, z: amountFilled, S: side, p: orderPrice, i: orderId, X: status, L: lastExecutedPrice, n: commissionAmount, N: commissionCurrency, } = msg.data.o;
+            let { x: executionType, s: symbol, q: amount, z: amountFilled, S: side, o: orderType, p: orderPrice, i: orderId, X: status, L: lastExecutedPrice, n: commissionAmount, N: commissionCurrency, } = msg.data.o;
             // map to our status
             if (status === "NEW") {
                 status = OrderStatus_1.OrderStatus.NEW;
@@ -352,6 +354,10 @@ class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
                 console.log(`not going to update with status ${status}`);
                 return;
             }
+            let event = null;
+            if (orderType === "LIQUIDATION") {
+                event = OrderEvent_1.OrderEvent.LIQUIDATION;
+            }
             const isSell = side.toUpperCase() == "SELL";
             amount = Math.abs(Number(amount || 0));
             amountFilled = Math.abs(Number(amountFilled || 0));
@@ -361,6 +367,7 @@ class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
                 pair: symbol,
                 exchangeOrderId: orderId,
                 status: status,
+                event: event,
                 msg: status,
                 price: price,
                 amount: isSell ? -amount : amount,

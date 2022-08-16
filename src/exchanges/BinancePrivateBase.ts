@@ -45,6 +45,7 @@ import { PrivateClientOptions } from "../PrivateClientOptions";
 import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
 import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
+import { OrderEvent } from "../OrderEvent";
 const JSONbig = require('json-bigint');
 
 export type BinancePrivateClientOptions = PrivateClientOptions & {
@@ -378,6 +379,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
                 pair: symbol,
                 exchangeOrderId: orderId,
                 status: status,
+                event: null,
                 msg: status,
                 price: price,
                 amount: isSell ? -amount : amount,
@@ -442,6 +444,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
                 q: amount,
                 z: amountFilled,
                 S: side,
+                o: orderType,
                 p: orderPrice,
                 i: orderId,
                 X: status,
@@ -465,6 +468,11 @@ export class BinancePrivateBase extends BasicPrivateClient {
                 return;
             }
 
+            let event = null;
+            if (orderType === "LIQUIDATION") {
+                event = OrderEvent.LIQUIDATION;
+            }
+
             const isSell = side.toUpperCase() == "SELL";
             amount = Math.abs(Number(amount || 0));
             amountFilled = Math.abs(Number(amountFilled || 0));
@@ -474,6 +482,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
                 pair: symbol,
                 exchangeOrderId: orderId,
                 status: status,
+                event: event,
                 msg: status,
                 price: price,
                 amount: isSell ? -amount : amount,
