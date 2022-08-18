@@ -80,6 +80,17 @@ export class OkexPrivateClient extends BasicPrivateClient {
                     ],
                 }),
             );
+            this._wss.send(
+                JSON.stringify({
+                    op: "subscribe",
+                    args: [
+                        {
+                            channel: "orders-algo",
+                            instType: "SPOT",
+                        },
+                    ],
+                }),
+            );
         }
 
         if (
@@ -93,6 +104,17 @@ export class OkexPrivateClient extends BasicPrivateClient {
                     args: [
                         {
                             channel: "orders",
+                            instType: "SWAP",
+                        },
+                    ],
+                }),
+            );
+            this._wss.send(
+                JSON.stringify({
+                    op: "subscribe",
+                    args: [
+                        {
+                            channel: "orders-algo",
                             instType: "SWAP",
                         },
                     ],
@@ -212,7 +234,7 @@ export class OkexPrivateClient extends BasicPrivateClient {
             return;
         }
 
-        if (msg.arg.channel === "orders") {
+        if (msg.arg.channel === "orders" || msg.arg.channel === "orders-algo") {
             /**
              * https://www.okx.com/docs-v5/en/#websocket-api-private-channel-order-channel
              * @example
@@ -293,7 +315,7 @@ export class OkexPrivateClient extends BasicPrivateClient {
                 const change = {
                     exchange: this.name,
                     pair: d.instId,
-                    exchangeOrderId: d.ordId || d.clOrdId,
+                    exchangeOrderId: d.ordId || d.algoId || d.clOrdId,
                     status: status,
                     msg: status,
                     price: price,

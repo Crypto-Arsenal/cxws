@@ -57,6 +57,15 @@ class OkexPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
                     },
                 ],
             }));
+            this._wss.send(JSON.stringify({
+                op: "subscribe",
+                args: [
+                    {
+                        channel: "orders-algo",
+                        instType: "SPOT",
+                    },
+                ],
+            }));
         }
         if (investmentType == undefined ||
             investmentType == types_1.InvestmentType.USD_M_FUTURES ||
@@ -66,6 +75,15 @@ class OkexPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
                 args: [
                     {
                         channel: "orders",
+                        instType: "SWAP",
+                    },
+                ],
+            }));
+            this._wss.send(JSON.stringify({
+                op: "subscribe",
+                args: [
+                    {
+                        channel: "orders-algo",
                         instType: "SWAP",
                     },
                 ],
@@ -163,7 +181,7 @@ class OkexPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
             console.warn("warn: failure response", JSON.stringify(msg));
             return;
         }
-        if (msg.arg.channel === "orders") {
+        if (msg.arg.channel === "orders" || msg.arg.channel === "orders-algo") {
             /**
              * https://www.okx.com/docs-v5/en/#websocket-api-private-channel-order-channel
              * @example
@@ -247,7 +265,7 @@ class OkexPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
                 const change = {
                     exchange: this.name,
                     pair: d.instId,
-                    exchangeOrderId: d.ordId || d.clOrdId,
+                    exchangeOrderId: d.ordId || d.algoId || d.clOrdId,
                     status: status,
                     msg: status,
                     price: price,
