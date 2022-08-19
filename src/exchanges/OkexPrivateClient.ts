@@ -304,6 +304,14 @@ export class OkexPrivateClient extends BasicPrivateClient {
                     status = OrderStatus.FILLED;
                 } else if (status === "canceled") {
                     status = OrderStatus.CANCELED;
+                } else if (msg.arg.channel === "orders-algo" && status === "effective") {
+                    const data = {
+                        oldId: d.algoId,
+                        newId: d.ordId,
+                    };
+                    console.log('onOrderIdChanged', data);
+                    this.emit("onOrderIdChanged", data);
+                    continue;
                 } else {
                     console.log(`not going to update with status ${status}`);
                     continue;
