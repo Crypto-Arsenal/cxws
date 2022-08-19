@@ -12,6 +12,7 @@ import { PrivateClientOptions } from "../PrivateClientOptions";
 import { base64Encode, hmacSign } from "../Jwt";
 import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
+import { OrderEvent } from "../OrderEvent";
 import { InvestmentType } from "../types";
 
 const pongBuffer = Buffer.from("pong");
@@ -308,6 +309,11 @@ export class OkexPrivateClient extends BasicPrivateClient {
                     continue;
                 }
 
+                let event = null;
+                if (d.category === "full_liquidation" || d.category == "partial_liquidation") {
+                    event = OrderEvent.LIQUIDATION;
+                }
+
                 const isSell = d.side.substring(0, 4).toLowerCase() == "sell";
                 const amount = Math.abs(Number(d.sz || 0));
                 const amountFilled = Math.abs(Number(d.accFillSz || 0));
@@ -317,6 +323,7 @@ export class OkexPrivateClient extends BasicPrivateClient {
                     pair: d.instId,
                     exchangeOrderId: d.ordId || d.algoId || d.clOrdId,
                     status: status,
+                    event: event,
                     msg: status,
                     price: price,
                     amount: isSell ? -amount : amount,

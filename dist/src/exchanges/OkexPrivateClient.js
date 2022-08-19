@@ -10,6 +10,7 @@ const BasicPrivateClient_1 = require("../BasicPrivateClient");
 const Throttle_1 = require("../flowcontrol/Throttle");
 const Jwt_1 = require("../Jwt");
 const OrderStatus_1 = require("../OrderStatus");
+const OrderEvent_1 = require("../OrderEvent");
 const types_1 = require("../types");
 const pongBuffer = Buffer.from("pong");
 /**
@@ -258,6 +259,10 @@ class OkexPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
                     console.log(`not going to update with status ${status}`);
                     continue;
                 }
+                let event = null;
+                if (d.category === "full_liquidation" || d.category == "partial_liquidation") {
+                    event = OrderEvent_1.OrderEvent.LIQUIDATION;
+                }
                 const isSell = d.side.substring(0, 4).toLowerCase() == "sell";
                 const amount = Math.abs(Number(d.sz || 0));
                 const amountFilled = Math.abs(Number(d.accFillSz || 0));
@@ -267,6 +272,7 @@ class OkexPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
                     pair: d.instId,
                     exchangeOrderId: d.ordId || d.algoId || d.clOrdId,
                     status: status,
+                    event: event,
                     msg: status,
                     price: price,
                     amount: isSell ? -amount : amount,
