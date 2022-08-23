@@ -10,52 +10,31 @@ import { CancelableFn } from "../flowcontrol/Fn";
 import * as ccxt from "ccxt";
 import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
+import { InvestmentType } from "../types";
 
 // TODO: send instIds from broker
-const instIds = [
-    "BTCUSDT_SPBL",
-    "ETHUSDT_SPBL",
-    "BNBUSDT_SPBL",
-    "XRPUSDT_SPBL",
-    "ADAUSDT_SPBL",
-    "SOLUSDT_SPBL",
-    "AVAXUSDT_SPBL",
-    "DOTUSDT_SPBL",
-    "DOGEUSDT_SPBL",
-    "SHIBUSDT_SPBL",
-    "MATICUSDT_SPBL",
-    "WBTCUSDT_SPBL",
-    "CROUSDT_SPBL",
-    "DAIUSDT_SPBL",
-    "ATOMUSDT_SPBL",
-    "LTCUSDT_SPBL",
-    "NEARUSDT_SPBL",
-    "LINKUSDT_SPBL",
-    "UNIUSDT_SPBL",
-    "TRXUSDT_SPBL",
-    "FTTUSDT_SPBL",
-    "BCHUSDT_SPBL",
-    "ETCUSDT_SPBL",
-    "MANAUSDT_SPBL",
-    "ICPUSDT_SPBL",
-    "SANDUSDT_SPBL",
-    "EGLDUSDT_SPBL",
-    "FTMUSDT_SPBL",
-    "FILUSDT_SPBL",
-    "APEUSDT_SPBL",
-    "AXSUSDT_SPBL",
-    "KLAYUSDT_SPBL",
-    "RUNEUSDT_SPBL",
-    "HNTUSDT_SPBL",
-    "EOSUSDT_SPBL",
-    "CAKEUSDT_SPBL",
-    "BTTUSDT_SPBL",
-    "AAVEUSDT_SPBL",
-    "MKRUSDT_SPBL",
-    "GRTUSDT_SPBL",
-    "LUNAUSDT_SPBL",
-    "CVXUSDT_SPBL",
-    "NEXOUSDT_SPBL",
+const SpotIds = [
+    'BTCUSDT_SPBL',   'BTCUSDC_SPBL',   'ETHUSDT_SPBL',
+    'ETHUSDC_SPBL',   'BNBUSDT_SPBL',   'BNBUSDC_SPBL',
+    'XRPUSDT_SPBL',   'XRPUSDC_SPBL',   'ADAUSDT_SPBL',
+    'ADAUSDC_SPBL',   'SOLUSDT_SPBL',   'SOLUSDC_SPBL',
+    'DOGEUSDT_SPBL',  'DOGEUSDC_SPBL',  'DOTUSDT_SPBL',
+    'DOTUSDC_SPBL',   'AVAXUSDT_SPBL',  'AVAXUSDC_SPBL',
+    'WBTCUSDT_SPBL',  'TRXUSDT_SPBL',   'TRXUSDC_SPBL',
+    'SHIBUSDT_SPBL',  'DAIUSDT_SPBL',   'DAIUSDC_SPBL',
+    'MATICUSDT_SPBL', 'MATICUSDC_SPBL', 'CROUSDT_SPBL',
+    'ATOMUSDT_SPBL',  'ATOMUSDC_SPBL',  'LTCUSDT_SPBL',
+    'LTCUSDC_SPBL',   'NEARUSDT_SPBL',  'NEARUSDC_SPBL',
+    'LINKUSDT_SPBL',  'LINKUSDC_SPBL',  'UNIUSDT_SPBL',
+    'UNIUSDC_SPBL',   'FTTUSDT_SPBL',   'BCHUSDT_SPBL',
+    'BCHUSDC_SPBL',   'ETCUSDT_SPBL',   'MANAUSDT_SPBL',
+    'MANAUSDC_SPBL',  'ICPUSDT_SPBL',   'SANDUSDT_SPBL',
+    'EGLDUSDT_SPBL',  'FTMUSDT_SPBL',   'FILUSDT_SPBL',
+    'FILUSDC_SPBL',   'APEUSDT_SPBL',   'APEUSDC_SPBL',
+    'AXSUSDT_SPBL',   'KLAYUSDT_SPBL',  'RUNEUSDT_SPBL',
+    'HNTUSDT_SPBL',   'EOSUSDT_SPBL',   'EOSUSDC_SPBL',
+    'MKRUSDT_SPBL',   'CAKEUSDT_SPBL',  'GRTUSDT_SPBL',
+    'LUNAUSDT_SPBL',  'LUNAUSDC_SPBL',
 ]
 export class BitgetPrivateClient extends BasicPrivateClient {
     protected _pingInterval: NodeJS.Timeout;
@@ -169,26 +148,44 @@ export class BitgetPrivateClient extends BasicPrivateClient {
      * @note should specify what currency to track
      */
     protected _sendSubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription) {
-        // Trading symbol (wildcard * is allowed)
-        this._wss.send(
-            JSON.stringify({
-                op: "subscribe",
-                args: instIds.map((instId) => {
-                    return {
-                        channel: "orders",
-                        instType: "spbl",
-                        instId: instId,
-                    }
+        let ids = channel.options?.ids;
+        const investmentType = channel.options?.investmentType;
+        if (investmentType == undefined || investmentType == InvestmentType.SPOT) {
+            if (!ids || !ids.length) {
+                ids = SpotIds;
+            }
+            // Trading symbol (wildcard * is allowed)
+            this._wss.send(
+                JSON.stringify({
+                    op: "subscribe",
+                    args: ids.map((instId) => {
+                        return {
+                            channel: "orders",
+                            instType: "spbl",
+                            instId: instId,
+                        }
+                    }),
+                    // args: [
+                    //     {
+                    //         channel: "orders",
+                    //         instType: "spbl",
+                    //         instId: "ETHUSDT_SPBL",
+                    //     },
+                    // ],
                 }),
-                // args: [
-                //     {
-                //         channel: "orders",
-                //         instType: "spbl",
-                //         instId: "ETHUSDT_SPBL",
-                //     },
-                // ],
-            }),
-        );
+            );
+        } else if (investmentType == undefined || investmentType == InvestmentType.USD_M_FUTURES) {
+            this._wss.send(
+                JSON.stringify({
+                    op: "subscribe",
+                    args: [{
+                        channel: "orders",
+                        instType: "UMCBL",
+                        instId: 'default',
+                    }],
+                }),
+            );
+        }
     }
 
     protected _sendUnsubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription) {
