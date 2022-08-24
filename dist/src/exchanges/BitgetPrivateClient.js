@@ -145,11 +145,18 @@ class BitgetPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
         else if (investmentType == undefined || investmentType == types_1.InvestmentType.USD_M_FUTURES) {
             this._wss.send(JSON.stringify({
                 op: "subscribe",
-                args: [{
+                args: [
+                    {
                         channel: "orders",
                         instType: "UMCBL",
                         instId: 'default',
-                    }],
+                    },
+                    {
+                        channel: "ordersAlgo",
+                        instType: "UMCBL",
+                        instId: 'default',
+                    },
+                ],
             }));
         }
     }
@@ -178,7 +185,7 @@ class BitgetPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
              */
             super._onConnected();
         }
-        if (arg && arg.channel == "orders" && data) {
+        if (arg && (arg.channel == "orders" || arg.channel == "ordersAlgo") && data) {
             /**
              * https://bitgetlimited.github.io/apidoc/en/spot/#order-channel
              * @example
@@ -212,8 +219,9 @@ class BitgetPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
             */
             for (const d of data) {
                 let status = d.status;
+                let state = d.state;
                 // map to our status
-                if (status === "new") {
+                if (status === "new" || state === "not_trigger") {
                     status = OrderStatus_1.OrderStatus.NEW;
                 }
                 else if (status === "partial-fill") {
@@ -222,11 +230,20 @@ class BitgetPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
                 else if (status === "full-fill") {
                     status = OrderStatus_1.OrderStatus.FILLED;
                 }
-                else if (status === "cancelled") {
+                else if (status === "cancelled" || state === "cancel" || state === "fail_trigger") {
                     status = OrderStatus_1.OrderStatus.CANCELED;
                 }
+                else if (arg.channel == "ordersAlgo" && state === "triggered") {
+                    const data = {
+                        oldId: d.id,
+                        newId: d.ordId,
+                    };
+                    console.log('onOrderIdChanged', data);
+                    this.emit("onOrderIdChanged", data);
+                    continue;
+                }
                 else {
-                    console.log(`not going to update with status ${status}`);
+                    console.log(`not going to update with status ${status || state}`);
                     continue;
                 }
                 const isSell = d.side.toLowerCase() == "sell";
@@ -248,7 +265,7 @@ class BitgetPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
                 const change = {
                     exchange: this.name,
                     pair: d.instId,
-                    exchangeOrderId: d.ordId,
+                    exchangeOrderId: d.ordId || d.id,
                     status: status,
                     msg: status,
                     price: price,
