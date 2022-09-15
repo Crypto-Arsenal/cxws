@@ -248,7 +248,7 @@ class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
     "Q": "0.00000000"              // Quote Order Qty
 }
              */
-            let { x: executionType, s: symbol, q: amount, z: amountFilled, S: side, p: orderPrice, i: orderId, X: status, L: lastExecutedPrice, n: commissionAmount, N: commissionCurrency, } = msg.data;
+            let { x: executionType, s: symbol, q: amount, z: amountFilled, S: side, o: orderType, p: orderPrice, i: orderId, X: status, L: lastExecutedPrice, n: commissionAmount, N: commissionCurrency, } = msg.data;
             // map to our status
             if (status === "NEW") {
                 status = OrderStatus_1.OrderStatus.NEW;
@@ -259,7 +259,10 @@ class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
             else if (status === "FILLED") {
                 status = OrderStatus_1.OrderStatus.FILLED;
             }
-            else if (status === "CANCELED" || status === "EXPIRED") {
+            else if (status === "CANCELED") {
+                status = OrderStatus_1.OrderStatus.CANCELED;
+            }
+            else if (status === "EXPIRED" && (orderType === "LIMIT" || orderType === "MARKET")) {
                 status = OrderStatus_1.OrderStatus.CANCELED;
             }
             else {
@@ -346,7 +349,10 @@ class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
             else if (status === "FILLED") {
                 status = OrderStatus_1.OrderStatus.FILLED;
             }
-            else if (status === "CANCELED" || status === "EXPIRED") {
+            else if (status === "CANCELED") {
+                status = OrderStatus_1.OrderStatus.CANCELED;
+            }
+            else if (status === "EXPIRED" && (orderType === "LIMIT" || orderType === "MARKET")) {
                 status = OrderStatus_1.OrderStatus.CANCELED;
             }
             else {

@@ -347,6 +347,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
                 q: amount,
                 z: amountFilled,
                 S: side,
+                o: orderType,
                 p: orderPrice,
                 i: orderId,
                 X: status,
@@ -362,7 +363,9 @@ export class BinancePrivateBase extends BasicPrivateClient {
                 status = OrderStatus.PARTIALLY_FILLED;
             } else if (status === "FILLED") {
                 status = OrderStatus.FILLED;
-            } else if (status === "CANCELED" || status === "EXPIRED") {
+            } else if (status === "CANCELED") {
+                status = OrderStatus.CANCELED;
+            } else if (status === "EXPIRED" && (orderType === "LIMIT" || orderType === "MARKET")) {
                 status = OrderStatus.CANCELED;
             } else {
                 // SKIP REJECTED and PENDING_CANCEL
@@ -460,7 +463,9 @@ export class BinancePrivateBase extends BasicPrivateClient {
                 status = OrderStatus.PARTIALLY_FILLED;
             } else if (status === "FILLED") {
                 status = OrderStatus.FILLED;
-            } else if (status === "CANCELED" || status === "EXPIRED") {
+            } else if (status === "CANCELED") {
+                status = OrderStatus.CANCELED;
+            } else if (status === "EXPIRED" && (orderType === "LIMIT" || orderType === "MARKET")) {
                 status = OrderStatus.CANCELED;
             } else {
                 // SKIP REJECTED and PENDING_CANCEL
