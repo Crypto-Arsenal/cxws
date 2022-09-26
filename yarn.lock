@@ -754,10 +754,10 @@ caniuse-lite@^1.0.30001286:
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001302.tgz#da57ce61c51177ef3661eeed7faef392d3790aaa"
   integrity sha512-YYTMO+tfwvgUN+1ZnRViE53Ma1S/oETg+J2lISsqi/ZTNThj3ZYBOKP2rHwJc37oCsPqAzJ3w2puZHn0xlLPPw==
 
-ccxt@1.93.76:
-  version "1.93.76"
-  resolved "https://registry.yarnpkg.com/ccxt/-/ccxt-1.93.76.tgz#0b33a21bd2b4b03b4e51a391764ef588824134ed"
-  integrity sha512-Hhe0TLtfiAOFfeXBow1CIlyY11CyEBfCWnTYtbi+wvBfFKfFsJnpCCp3ubLM93k75EIwxrkmplP2BLoC8tpA2Q==
+ccxt@1.93.77:
+  version "1.93.77"
+  resolved "https://registry.yarnpkg.com/ccxt/-/ccxt-1.93.77.tgz#46ff9d2ddf52da1087a747f20202c96e3756b3a8"
+  integrity sha512-FHrlj8B8JAw4gVjP1GFUVHK1Lte/7BwM7/s/lTU4knVVom1Xhw0XX5nkXTUc+rlniRAuYRUzNTCtzQbgAx/CLw==
 
 chai@^4.3.4:
   version "4.3.5"
