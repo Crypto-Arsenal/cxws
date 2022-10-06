@@ -31,6 +31,7 @@ class BinancePrivateClient extends BinancePrivateBase_1.BinancePrivateBase {
      * TODO: SEE HOW KUOCOIN DOES IT!!!
      */
     _connect() {
+        // A User Data Stream listenKey is valid for 60 minutes after creation.
         this.ccxt
             .publicPostUserDataStream()
             .then(d => {
@@ -39,17 +40,17 @@ class BinancePrivateClient extends BinancePrivateBase_1.BinancePrivateBase {
                 this.dynamicWssPath = `${this.wssPath}?streams=${this.apiToken}`;
                 const that = this;
                 setTimeout(function userDataKeepAlive() {
-                    // keepalive
+                    // Doing a PUT on a listenKey will extend its validity for 60 minutes.
                     try {
                         that.ccxt
                             .publicPutUserDataStream({ listenKey: that.apiToken })
-                            .then(d => setTimeout(userDataKeepAlive, 60 * 30 * 1000))
-                            .catch(err => setTimeout(userDataKeepAlive, 60000));
+                            .then(d => setTimeout(userDataKeepAlive, 1800000)) // extend in 30 mins
+                            .catch(err => setTimeout(userDataKeepAlive, 60000)); // retry in 1 min
                     }
                     catch (error) {
-                        setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
+                        setTimeout(userDataKeepAlive, 60000); // retry in 1 min
                     }
-                }, 60 * 30 * 1000); // 30 minute keepalive
+                }, 1800000); // extend in 30 mins
             }
             super._connect();
         })

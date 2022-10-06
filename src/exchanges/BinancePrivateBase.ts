@@ -301,6 +301,11 @@ export class BinancePrivateBase extends BasicPrivateClient {
             return;
         }
 
+        if (msg.data.e === "listenKeyExpired") {
+            // reconnect when listenKey is expired
+            // https://binance-docs.github.io/apidocs/futures/en/#close-user-data-stream-user_stream
+            return this.reconnect();
+        }
         if (msg.data.e === "executionReport") {
             /**
              * https://binance-docs.github.io/apidocs/spot/en/#payload-order-update
