@@ -221,7 +221,7 @@ class BitgetPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
                 let status = d.status;
                 let state = d.state;
                 // map to our status
-                if (status === "new" || state === "not_trigger") {
+                if (status === 'open' || status === "new" || state === "not_trigger") {
                     status = OrderStatus_1.OrderStatus.NEW;
                 }
                 else if (status === "partial-fill") {
@@ -230,7 +230,7 @@ class BitgetPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
                 else if (status === "full-fill") {
                     status = OrderStatus_1.OrderStatus.FILLED;
                 }
-                else if (status === "cancelled" || state === "cancel" || state === "fail_trigger") {
+                else if (status === "cancelled" || state === "cancel" || state === "fail_trigger" || status === 'expired') {
                     status = OrderStatus_1.OrderStatus.CANCELED;
                 }
                 else if (arg.channel == "ordersAlgo" && state === "triggered") {

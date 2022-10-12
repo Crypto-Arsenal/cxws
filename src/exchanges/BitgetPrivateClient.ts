@@ -264,13 +264,13 @@ export class BitgetPrivateClient extends BasicPrivateClient {
                 let state = d.state;
 
                 // map to our status
-                if (status === "new" || state === "not_trigger") {
+                if (status === 'open' || status === "new" || state === "not_trigger") {
                     status = OrderStatus.NEW;
                 } else if (status === "partial-fill") {
                     status = OrderStatus.PARTIALLY_FILLED;
                 } else if (status === "full-fill") {
                     status = OrderStatus.FILLED;
-                } else if (status === "cancelled" || state === "cancel" || state === "fail_trigger") {
+                } else if (status === "cancelled" || state === "cancel" || state === "fail_trigger" || status === 'expired') {
                     status = OrderStatus.CANCELED;
                 } else if (arg.channel == "ordersAlgo" && state === "triggered") {
                     const data = {
