@@ -243,16 +243,16 @@ class OkexPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
             for (const d of msg.data) {
                 let status = d.state;
                 // map to our status
-                if (status === "live") {
+                if (status === 'open' || status === "live") {
                     status = OrderStatus_1.OrderStatus.NEW;
                 }
                 else if (status === "partially_filled") {
                     status = OrderStatus_1.OrderStatus.PARTIALLY_FILLED;
                 }
-                else if (status === "filled") {
+                else if (status === "filled" || status === "closed") {
                     status = OrderStatus_1.OrderStatus.FILLED;
                 }
-                else if (status === "canceled") {
+                else if (status === "canceled" || status === "cancelled" || status === "expired" || status === "order_failed") {
                     status = OrderStatus_1.OrderStatus.CANCELED;
                 }
                 else if (msg.arg.channel === "orders-algo" && status === "effective") {

@@ -296,13 +296,13 @@ export class OkexPrivateClient extends BasicPrivateClient {
             for (const d of msg.data) {
                 let status = d.state;
                 // map to our status
-                if (status === "live") {
+                if (status === 'open' || status === "live") {
                     status = OrderStatus.NEW;
                 } else if (status === "partially_filled") {
                     status = OrderStatus.PARTIALLY_FILLED;
-                } else if (status === "filled") {
+                } else if (status === "filled" || status === "closed") {
                     status = OrderStatus.FILLED;
-                } else if (status === "canceled") {
+                } else if (status === "canceled" || status === "cancelled" || status === "expired" || status === "order_failed") {
                     status = OrderStatus.CANCELED;
                 } else if (msg.arg.channel === "orders-algo" && status === "effective") {
                     const data = {
