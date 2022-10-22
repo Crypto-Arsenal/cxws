@@ -67,7 +67,7 @@ export class BinanceFuturesCoinmPrivateClient extends BinancePrivateBase {
                                 .then(d => {
                                     if (d.listenKey != that.apiToken) {
                                         console.log(
-                                            "dapiPrivatePostListenKey listenKey renewal - reconnecting",
+                                            "dapiPrivatePostListenKey listenKey renewal expired key- reconnecting",
                                             d.listenKey,
                                             that.apiToken,
                                             new Date(),

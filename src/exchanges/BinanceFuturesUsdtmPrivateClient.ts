@@ -77,7 +77,7 @@ export class BinanceFuturesUsdtmPrivateClient extends BinancePrivateBase {
                                     console.log("fapiPrivatePostListenKey", d, that.apiToken);
                                     if (d.listenKey != that.apiToken) {
                                         console.log(
-                                            "fapiPrivatePostListenKey listenKey renewal - reconnecting",
+                                            "fapiPrivatePostListenKey listenKey renewal expired key- reconnecting",
                                             d.listenKey,
                                             that.apiToken,
                                             new Date(),

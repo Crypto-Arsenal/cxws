@@ -69,7 +69,7 @@ export class BinancePrivateClient extends BinancePrivateBase {
                                 .then(d => {
                                     if (d.listenKey != that.apiToken) {
                                         console.log(
-                                            "publicPostUserDataStream listenKey renewal - reconnecting",
+                                            "publicPostUserDataStream listenKey renewal expired key- reconnecting",
                                             d.listenKey,
                                             that.apiToken,
                                         );

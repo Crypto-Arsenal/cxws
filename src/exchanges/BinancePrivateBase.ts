@@ -136,7 +136,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
         this.ccxt = new ccxt.binance({
             apiKey,
             secret: apiSecret,
-            verbose: false,
+            verbose: true,
         });
 
         try {
