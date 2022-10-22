@@ -48,10 +48,10 @@ import { Order } from "../Order";
 import { OrderEvent } from "../OrderEvent";
 const JSONbig = require("json-bigint");
 
-export const LISTEN_KEY_RENEW_INTERVAL = 10000; // 10s
-export const LISTEN_KEY_RENEW_RETRY_INTERVAL = 60000; // 60s
-export const LIST_SUBSCRIPTION_PING_INTERVAL = 10000; // 10s
-export const BINANCE_RECONNECT_INTERVAL = 60000; // 10s
+export const LISTEN_KEY_RENEW_INTERVAL = 1200000; // 1200s -> 20m
+export const LISTEN_KEY_RENEW_RETRY_INTERVAL = 30000; // 30s
+export const LIST_SUBSCRIPTION_PING_INTERVAL = 900000; // 900s -> 15m
+export const BINANCE_RECONNECT_INTERVAL = 82800000; // 82800s -> 23h
 
 export type BinancePrivateClientOptions = PrivateClientOptions & {
     name?: ccxt.ExchangeId;

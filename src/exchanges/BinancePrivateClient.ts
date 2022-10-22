@@ -50,6 +50,8 @@ export class BinancePrivateClient extends BinancePrivateBase {
      * TODO: SEE HOW KUOCOIN DOES IT!!!
      */
     protected _connect(): void {
+        clearTimeout(this._listenKeyAliveNesstimeout);
+
         // A User Data Stream listenKey is valid for 60 minutes after creation.
         this.ccxt
             .publicPostUserDataStream()
