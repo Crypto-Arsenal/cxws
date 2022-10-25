@@ -209,8 +209,8 @@ class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
     }
     _stopPing() {
         clearInterval(this._pingInterval);
-        clearInterval(this._listenKeyAliveNesstimeout);
         clearInterval(this._reconnect24Interval);
+        clearTimeout(this._listenKeyAliveNesstimeout);
     }
     _sendPing() {
         if (this._wss) {

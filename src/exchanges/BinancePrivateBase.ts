@@ -311,8 +311,8 @@ export class BinancePrivateBase extends BasicPrivateClient {
 
     protected _stopPing() {
         clearInterval(this._pingInterval);
-        clearInterval(this._listenKeyAliveNesstimeout);
         clearInterval(this._reconnect24Interval);
+        clearTimeout(this._listenKeyAliveNesstimeout);
     }
 
     protected _sendPing() {

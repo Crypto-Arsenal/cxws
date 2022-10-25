@@ -50,7 +50,6 @@ export class BinanceFuturesCoinmPrivateClient extends BinancePrivateBase {
      * TODO: SEE HOW KUOCOIN DOES IT!!!
      */
     protected _connect(): void {
-        clearTimeout(this._listenKeyAliveNesstimeout);
         // A User Data Stream listenKey is valid for 60 minutes after creation.
         this.ccxt
             .dapiPrivatePostListenKey()
@@ -59,6 +58,7 @@ export class BinanceFuturesCoinmPrivateClient extends BinancePrivateBase {
                     this.apiToken = d.listenKey;
                     this.dynamicWssPath = `${this.wssPath}?streams=${this.apiToken}`;
                     const that = this;
+                    clearTimeout(this._listenKeyAliveNesstimeout);
                     this._listenKeyAliveNesstimeout = setTimeout(function userDataKeepAlive() {
                         // Doing a PUT on a listenKey will extend its validity for 60 minutes.
                         try {
