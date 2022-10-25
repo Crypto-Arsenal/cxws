@@ -28,7 +28,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.candlePeriod = exports.BinancePrivateBase = void 0;
+exports.candlePeriod = exports.BinancePrivateBase = exports.BINANCE_RECONNECT_INTERVAL = exports.LIST_SUBSCRIPTION_PING_INTERVAL = exports.LISTEN_KEY_RENEW_RETRY_INTERVAL = exports.LISTEN_KEY_RENEW_INTERVAL = void 0;
 const Candle_1 = require("../Candle");
 const CandlePeriod_1 = require("../CandlePeriod");
 const Batch_1 = require("../flowcontrol/Batch");
@@ -43,7 +43,11 @@ const ccxt_1 = __importDefault(require("ccxt"));
 const BasicPrivateClient_1 = require("../BasicPrivateClient");
 const OrderStatus_1 = require("../OrderStatus");
 const OrderEvent_1 = require("../OrderEvent");
-const JSONbig = require('json-bigint');
+const JSONbig = require("json-bigint");
+exports.LISTEN_KEY_RENEW_INTERVAL = 1200000; // 1200s -> 20m
+exports.LISTEN_KEY_RENEW_RETRY_INTERVAL = 30000; // 30s
+exports.LIST_SUBSCRIPTION_PING_INTERVAL = 900000; // 900s -> 15m
+exports.BINANCE_RECONNECT_INTERVAL = 82800000; // 82800s -> 23h
 class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
     constructor({ name = "binance", wssPath, restL2SnapshotPath, watcherMs = 30000, useAggTrades = true, requestSnapshot = true, socketBatchSize = 200, socketThrottleMs = 1000, restThrottleMs = 1000, l2updateSpeed = "", l2snapshotSpeed = "", batchTickers = true, apiKey = "", apiSecret = "", } = {}) {
         super(wssPath, name, apiKey, apiSecret, "", undefined, watcherMs);
@@ -188,8 +192,33 @@ class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
     _sendUnsubLevel3Updates() {
         throw new Error("Method not implemented.");
     }
+    _beforeConnect() {
+        this._wss.on("connected", this._startPing.bind(this));
+        this._wss.on("disconnected", this._stopPing.bind(this));
+        this._wss.on("closed", this._stopPing.bind(this));
+    }
+    /**
+     * @documentation https://bitgetlimited.github.io/apidoc/en/spot/#connect
+     * @note should ping less than 30 seconds
+     */
+    _startPing() {
+        clearInterval(this._pingInterval);
+        clearInterval(this._reconnect24Interval);
+        this._pingInterval = setInterval(this._sendPing.bind(this), exports.LIST_SUBSCRIPTION_PING_INTERVAL);
+        this._reconnect24Interval = setInterval(this.reconnect.bind(this), exports.BINANCE_RECONNECT_INTERVAL);
+    }
+    _stopPing() {
+        clearInterval(this._pingInterval);
+        clearInterval(this._reconnect24Interval);
+        clearTimeout(this._listenKeyAliveNesstimeout);
+    }
+    _sendPing() {
+        if (this._wss) {
+            this._wss.send(JSON.stringify({ method: "LIST_SUBSCRIPTIONS", id: 3 }));
+        }
+    }
     _onMessage(raw) {
-        console.log('_onMessage', raw);
+        console.log("_onMessage", raw);
         const msg = JSONbig.parse(raw);
         // subscribe/unsubscribe responses
         if (msg.result === null && msg.id) {
@@ -201,19 +230,28 @@ class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
             const error = new Error(msg.error.msg);
             error.msg = msg;
             this.emit("error", error);
+            return this.reconnect();
+        }
+        // LIST_SUBSCRIPTIONS - will NOT reflect even if the stream listen key is INVALID
+        if (msg?.id == 3 && msg?.result) {
+            // {"result":["HK6E6wUbGFnoWlD6Qe44fNcvI7KpmjL3s87mbriZqwIze7vxLBDhHFGeFjWM"],"id":3}
+            this.apiToken = msg?.result ? msg?.result[0] : "INVALID LIST SUBSCRIPTION";
+            console.log("LIST_SUBSCRIPTIONS", this.apiToken);
+            return;
         }
         // All code past this point relies on msg.stream in some manner. This code
         // acts as a guard on msg.stream and aborts prematurely if the property is
-        // not available.
+        // not available. THIS ASSUMES THAT WE LISTEN TO MULTI STREAMS AND DON'T SUBSCRIBE TO RAW STREAM
         if (!msg.stream) {
+            console.log("raw websocket stream", msg);
             return;
         }
-        if (msg.data.e === "listenKeyExpired") {
+        if (msg.data?.e === "listenKeyExpired") {
             // reconnect when listenKey is expired
             // https://binance-docs.github.io/apidocs/futures/en/#close-user-data-stream-user_stream
             return this.reconnect();
         }
-        if (msg.data.e === "executionReport") {
+        if (msg.data?.e === "executionReport") {
             /**
              * https://binance-docs.github.io/apidocs/spot/en/#payload-order-update
              * @example
@@ -294,7 +332,7 @@ class BinancePrivateBase extends BasicPrivateClient_1.BasicPrivateClient {
             };
             this.emit("orders", change);
         }
-        else if (msg.data.e === "ORDER_TRADE_UPDATE") {
+        else if (msg.data?.e === "ORDER_TRADE_UPDATE") {
             /**
              * https://binance-docs.github.io/apidocs/futures/en/#event-order-update
              * @example

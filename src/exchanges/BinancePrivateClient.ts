@@ -1,4 +1,9 @@
-import { BinancePrivateBase, BinancePrivateClientOptions } from "./BinancePrivateBase";
+import {
+    BinancePrivateBase,
+    BinancePrivateClientOptions,
+    LISTEN_KEY_RENEW_INTERVAL,
+    LISTEN_KEY_RENEW_RETRY_INTERVAL,
+} from "./BinancePrivateBase";
 
 export class BinancePrivateClient extends BinancePrivateBase {
     constructor({
@@ -49,25 +54,61 @@ export class BinancePrivateClient extends BinancePrivateBase {
         this.ccxt
             .publicPostUserDataStream()
             .then(d => {
+                console.log("publicPostUserDataStream result", d);
                 if (d.listenKey) {
                     this.apiToken = d.listenKey;
                     this.dynamicWssPath = `${this.wssPath}?streams=${this.apiToken}`;
                     const that = this;
-                    setTimeout(function userDataKeepAlive() {
-                        // Doing a PUT on a listenKey will extend its validity for 60 minutes.
+                    clearTimeout(this._listenKeyAliveNesstimeout);
+                    this._listenKeyAliveNesstimeout = setTimeout(function userDataKeepAlive() {
+                        // Doing a POST/PUT on a listenKey will extend its validity for 60 minutes.
                         try {
                             that.ccxt
-                                .publicPutUserDataStream({ listenKey: that.apiToken })
-                                .then(d => setTimeout(userDataKeepAlive, 1800000)) // extend in 30 mins
-                                .catch(err => setTimeout(userDataKeepAlive, 60000)); // retry in 1 min
-                        } catch (error) {
-                            setTimeout(userDataKeepAlive, 60000); // retry in 1 min
+                                .publicPostUserDataStream()
+                                .then(d => {
+                                    if (d.listenKey != that.apiToken) {
+                                        console.log(
+                                            "publicPostUserDataStream listenKey renewal expired key- reconnecting",
+                                            d.listenKey,
+                                            that.apiToken,
+                                        );
+                                        clearTimeout(that._listenKeyAliveNesstimeout);
+                                        that.reconnect();
+                                        return;
+                                    }
+                                    console.log(
+                                        "publicPostUserDataStream listenKey extended",
+                                        d.listenKey,
+                                        that.apiToken,
+                                    );
+                                    that._listenKeyAliveNesstimeout = setTimeout(
+                                        userDataKeepAlive,
+                                        LISTEN_KEY_RENEW_INTERVAL,
+                                    );
+                                }) // extend in 30 mins
+                                .catch(err => {
+                                    console.error(
+                                        "publicPostUserDataStream listenKey renewal error",
+                                        err,
+                                    );
+                                    that._listenKeyAliveNesstimeout = setTimeout(
+                                        userDataKeepAlive,
+                                        LISTEN_KEY_RENEW_RETRY_INTERVAL,
+                                    );
+                                }); // retry in 1 minute
+                        } catch (err) {
+                            console.error("publicPostUserDataStream listenKey renewal error", err);
+                            that._listenKeyAliveNesstimeout = setTimeout(
+                                userDataKeepAlive,
+                                LISTEN_KEY_RENEW_RETRY_INTERVAL,
+                            ); // retry in 1 min
                         }
-                    }, 1800000); // extend in 30 mins
+                    }, LISTEN_KEY_RENEW_INTERVAL); // extend in 30 mins
                 }
                 super._connect();
             })
             .catch(err => {
+                console.error("publicPostUserDataStream listenKey creation error", err);
                 this.emit("error", err);
             });
     }

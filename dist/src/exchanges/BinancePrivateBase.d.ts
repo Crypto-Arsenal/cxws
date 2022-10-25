@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { Candle } from "../Candle";
 import { CandlePeriod } from "../CandlePeriod";
 import { CancelableFn } from "../flowcontrol/Fn";
@@ -9,6 +10,10 @@ import { Level2Update } from "../Level2Update";
 import ccxt from "ccxt";
 import { PrivateClientOptions } from "../PrivateClientOptions";
 import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
+export declare const LISTEN_KEY_RENEW_INTERVAL = 1200000;
+export declare const LISTEN_KEY_RENEW_RETRY_INTERVAL = 30000;
+export declare const LIST_SUBSCRIPTION_PING_INTERVAL = 900000;
+export declare const BINANCE_RECONNECT_INTERVAL = 82800000;
 export declare type BinancePrivateClientOptions = PrivateClientOptions & {
     name?: ccxt.ExchangeId;
     wssPath?: string;
@@ -26,6 +31,8 @@ export declare type BinancePrivateClientOptions = PrivateClientOptions & {
 };
 export declare class BinancePrivateBase extends BasicPrivateClient {
     dynamicWssPath: string;
+    protected _pingInterval: NodeJS.Timeout;
+    protected _listenKeyAliveNesstimeout: NodeJS.Timeout;
     useAggTrades: boolean;
     l2updateSpeed: string;
     l2snapshotSpeed: string;
@@ -39,6 +46,7 @@ export declare class BinancePrivateBase extends BasicPrivateClient {
     protected _batchUnsub: CancelableFn;
     protected _sendMessage: CancelableFn;
     protected _requestLevel2Snapshot: CancelableFn;
+    _reconnect24Interval: NodeJS.Timeout;
     constructor({ name, wssPath, restL2SnapshotPath, watcherMs, useAggTrades, requestSnapshot, socketBatchSize, socketThrottleMs, restThrottleMs, l2updateSpeed, l2snapshotSpeed, batchTickers, apiKey, apiSecret, }?: BinancePrivateClientOptions);
     protected _sendUnsubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription): void;
     protected getWssPath(): string;
@@ -59,6 +67,14 @@ export declare class BinancePrivateBase extends BasicPrivateClient {
     protected _sendUnsubLevel3Snapshots(): void;
     protected _sendSubLevel3Updates(): void;
     protected _sendUnsubLevel3Updates(): void;
+    protected _beforeConnect(): void;
+    /**
+     * @documentation https://bitgetlimited.github.io/apidoc/en/spot/#connect
+     * @note should ping less than 30 seconds
+     */
+    protected _startPing(): void;
+    protected _stopPing(): void;
+    protected _sendPing(): void;
     protected _onMessage(raw: string): void;
     protected _constructTicker(msg: any, market: Market): Ticker;
     protected _constructAggTrade({ data }: {

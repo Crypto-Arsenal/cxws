@@ -1,4 +1,9 @@
-import { BinancePrivateBase, BinancePrivateClientOptions } from "./BinancePrivateBase";
+import {
+    BinancePrivateBase,
+    BinancePrivateClientOptions,
+    LISTEN_KEY_RENEW_INTERVAL,
+    LISTEN_KEY_RENEW_RETRY_INTERVAL,
+} from "./BinancePrivateBase";
 
 export class BinanceFuturesCoinmPrivateClient extends BinancePrivateBase {
     constructor({
@@ -53,21 +58,55 @@ export class BinanceFuturesCoinmPrivateClient extends BinancePrivateBase {
                     this.apiToken = d.listenKey;
                     this.dynamicWssPath = `${this.wssPath}?streams=${this.apiToken}`;
                     const that = this;
-                    setTimeout(function userDataKeepAlive() {
+                    clearTimeout(this._listenKeyAliveNesstimeout);
+                    this._listenKeyAliveNesstimeout = setTimeout(function userDataKeepAlive() {
                         // Doing a PUT on a listenKey will extend its validity for 60 minutes.
                         try {
                             that.ccxt
-                                .dapiPrivatePutListenKey({ listenKey: that.apiToken })
-                                .then(d => setTimeout(userDataKeepAlive, 1800000)) // extend in 30 mins
-                                .catch(err => setTimeout(userDataKeepAlive, 60000)); // retry in 1 min
-                        } catch (error) {
-                            setTimeout(userDataKeepAlive, 60000); // retry in 1 min
+                                .dapiPrivatePostListenKey({ listenKey: that.apiToken })
+                                .then(d => {
+                                    if (d.listenKey != that.apiToken) {
+                                        console.log(
+                                            "dapiPrivatePostListenKey listenKey renewal expired key- reconnecting",
+                                            d.listenKey,
+                                            that.apiToken,
+                                            new Date(),
+                                        );
+                                        clearTimeout(that._listenKeyAliveNesstimeout);
+                                        that.reconnect();
+                                        return;
+                                    }
+                                    console.log(
+                                        "dapiPrivatePostListenKey listenKey extended",
+                                        d.listenKey,
+                                        that.apiToken,
+                                        new Date(),
+                                    );
+                                    that._listenKeyAliveNesstimeout = setTimeout(
+                                        userDataKeepAlive,
+                                        LISTEN_KEY_RENEW_INTERVAL,
+                                    );
+                                }) // extend in 30 mins
+                                .catch(err => {
+                                    console.log("dapiPrivatePostListenKey error", err);
+                                    that._listenKeyAliveNesstimeout = setTimeout(
+                                        userDataKeepAlive,
+                                        LISTEN_KEY_RENEW_RETRY_INTERVAL,
+                                    );
+                                }); // retry in 1 min
+                        } catch (err) {
+                            console.error("dapiPrivatePostListenKey listenKey creation error", err);
+                            that._listenKeyAliveNesstimeout = setTimeout(
+                                userDataKeepAlive,
+                                LISTEN_KEY_RENEW_RETRY_INTERVAL,
+                            ); // retry in 1 min
                         }
-                    }, 1800000); // extend in 30 mins
+                    }, LISTEN_KEY_RENEW_INTERVAL); // extend in 30 mins
                 }
                 super._connect();
             })
             .catch(err => {
+                console.error("dapiPrivatePostListenKey listenKey creation error", err);
                 this.emit("error", err);
             });
     }
