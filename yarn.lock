@@ -754,10 +754,12 @@ caniuse-lite@^1.0.30001286:
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001302.tgz#da57ce61c51177ef3661eeed7faef392d3790aaa"
   integrity sha512-YYTMO+tfwvgUN+1ZnRViE53Ma1S/oETg+J2lISsqi/ZTNThj3ZYBOKP2rHwJc37oCsPqAzJ3w2puZHn0xlLPPw==
 
-ccxt@1.93.77:
-  version "1.93.77"
-  resolved "https://registry.yarnpkg.com/ccxt/-/ccxt-1.93.77.tgz#46ff9d2ddf52da1087a747f20202c96e3756b3a8"
-  integrity sha512-FHrlj8B8JAw4gVjP1GFUVHK1Lte/7BwM7/s/lTU4knVVom1Xhw0XX5nkXTUc+rlniRAuYRUzNTCtzQbgAx/CLw==
+ccxt@2.4.47:
+  version "2.4.47"
+  resolved "https://registry.yarnpkg.com/ccxt/-/ccxt-2.4.47.tgz#405d2b3a5c642c3916e7bdca8a10e37846b4a284"
+  integrity sha512-VnywRl5ENAyzCRcyficrCGbFE1nFHs3C4fZ9cIC2llicoeyM3VIIMqE0DQKXk1G+XE9Vs+7R8/Ty3RsgO5XyUg==
+  dependencies:
+    ws "^8.8.1"
 
 chai@^4.3.4:
   version "4.3.5"
@@ -2998,6 +3000,11 @@ ws@^7.3.0:
   version "7.5.6"
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.6.tgz#e59fc509fb15ddfb65487ee9765c5a51dec5fe7b"
   integrity sha512-6GLgCqo2cy2A2rjCNFlxQS6ZljG/coZfZXclldI8FB/1G3CCI36Zd8xy2HrFVACi8tfk5XrgLQEk+P0Tnz9UcA==
+
+ws@^8.8.1:
+  version "8.11.0"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-8.11.0.tgz#6a0d36b8edfd9f96d8b25683db2f8d7de6e8e143"
+  integrity sha512-HPG3wQd9sNQoT9xHyNCXoDUa+Xw/VevmY9FoHyQ+g+rrMn4j6FB4np7Z0OhdTgjx6MgQLK7jwSy1YecU1+4Asg==
 
 xmlhttprequest@^1.8.0:
   version "1.8.0"
