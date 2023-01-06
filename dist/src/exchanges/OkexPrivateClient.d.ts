@@ -6,6 +6,7 @@ import { Market } from "../Market";
 import { PrivateClientOptions } from "../PrivateClientOptions";
 export declare type OkexClientOptions = PrivateClientOptions & {
     sendThrottleMs?: number;
+    testNet?: boolean;
 };
 /**
  * Implements OKEx V3 WebSocket API as defined in
@@ -32,7 +33,7 @@ export declare class OkexPrivateClient extends BasicPrivateClient {
     candlePeriod: CandlePeriod;
     protected _sendMessage: CancelableFn;
     protected _pingInterval: NodeJS.Timeout;
-    constructor({ wssPath, watcherMs, apiKey, apiSecret, apiPassword, sendThrottleMs, }?: OkexClientOptions);
+    constructor({ wssPath, watcherMs, apiKey, apiSecret, apiPassword, sendThrottleMs, testNet, }?: OkexClientOptions);
     /**
      *
      * @param subscriptionId

@@ -35,7 +35,10 @@ const pongBuffer = Buffer.from("pong");
  * Refer to: https://www.okex.com/docs/en/#spot_ws-checksum
  */
 class OkexPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
-    constructor({ wssPath = "wss://ws.okx.com:8443/ws/v5/private", watcherMs, apiKey, apiSecret, apiPassword, sendThrottleMs = 20, } = {}) {
+    constructor({ wssPath = "wss://ws.okx.com:8443/ws/v5/private", watcherMs, apiKey, apiSecret, apiPassword, sendThrottleMs = 20, testNet = false, } = {}) {
+        if (testNet) {
+            wssPath = "wss://wspap.okx.com:8443/ws/v5/private?brokerId=9999";
+        }
         super(wssPath, "okex", apiKey, apiSecret, apiPassword, undefined, watcherMs);
         this.hasPrivateOrders = true;
         this._sendMessage = (0, Throttle_1.throttle)(this.__sendMessage.bind(this), sendThrottleMs);

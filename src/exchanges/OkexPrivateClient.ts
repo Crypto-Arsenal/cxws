@@ -19,6 +19,7 @@ const pongBuffer = Buffer.from("pong");
 
 export type OkexClientOptions = PrivateClientOptions & {
     sendThrottleMs?: number;
+    testNet?: boolean;
 };
 
 /**
@@ -55,7 +56,11 @@ export class OkexPrivateClient extends BasicPrivateClient {
         apiSecret,
         apiPassword,
         sendThrottleMs = 20,
+        testNet = false,
     }: OkexClientOptions = {}) {
+        if (testNet) {
+            wssPath = "wss://wspap.okx.com:8443/ws/v5/private?brokerId=9999";
+        }
         super(wssPath, "okex", apiKey, apiSecret, apiPassword, undefined, watcherMs);
         this.hasPrivateOrders = true;
         this._sendMessage = throttle(this.__sendMessage.bind(this), sendThrottleMs);
