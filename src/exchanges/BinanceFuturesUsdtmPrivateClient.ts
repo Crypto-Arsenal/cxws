@@ -4,6 +4,7 @@ import {
     LISTEN_KEY_RENEW_INTERVAL,
     LISTEN_KEY_RENEW_RETRY_INTERVAL,
 } from "./BinancePrivateBase";
+import { ExchangeId } from "../types";
 
 /**
  * Base Url is wss://fstream-auth.binance.com
@@ -35,7 +36,7 @@ export class BinanceFuturesUsdtmPrivateClient extends BinancePrivateBase {
             restL2SnapshotPath = "https://testnet.binancefuture.com/api/v1/depth";
         }
         super({
-            name: "binance",
+            name: "binance" as ExchangeId,
             restL2SnapshotPath,
             wssPath,
             useAggTrades,

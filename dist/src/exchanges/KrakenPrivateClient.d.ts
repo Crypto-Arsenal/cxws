@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { BasicPrivateClient, PrivateChannelSubscription, PrivateChannelSubscriptionMap } from "../BasicPrivateClient";
-import ccxt from "ccxt";
+import { kraken } from "ccxt";
 import { PrivateClientOptions } from "../PrivateClientOptions";
 export declare type KrakenClientOptions = PrivateClientOptions & {
     autoloadSymbolMaps?: boolean;
@@ -26,7 +26,7 @@ export declare type KrakenClientOptions = PrivateClientOptions & {
     determine the remoteIds to send to the server on all sub/unsub requests.
   */
 export declare class KrakenPrivateClient extends BasicPrivateClient {
-    ccxt: ccxt.kraken;
+    ccxt: kraken;
     debounceWait: number;
     protected debouceTimeoutHandles: Map<string, NodeJS.Timeout>;
     protected subscriptionLog: Map<number, any>;

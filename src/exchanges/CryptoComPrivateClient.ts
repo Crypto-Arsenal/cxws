@@ -4,17 +4,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
-import { base64Encode, hmacSign } from "../Jwt";
-import moment from "moment";
 import crypto from "crypto-js";
-import * as ccxt from "ccxt";
 import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
+import { ExchangeId } from "../types";
 export class CryptoComPrivateClient extends BasicPrivateClient {
     constructor({
         apiKey,
         apiSecret,
-        name = "cryptocom" as ccxt.ExchangeId,
+        name = "cryptocom" as ExchangeId,
         wssPath = "wss://stream.crypto.com/v2/user",
     }) {
         super(wssPath, name, apiKey, apiSecret, "", undefined);

@@ -4,6 +4,7 @@ import {
     LISTEN_KEY_RENEW_INTERVAL,
     LISTEN_KEY_RENEW_RETRY_INTERVAL,
 } from "./BinancePrivateBase";
+import { ExchangeId } from "../types";
 
 export class BinancePrivateClient extends BinancePrivateBase {
     constructor({
@@ -27,7 +28,7 @@ export class BinancePrivateClient extends BinancePrivateBase {
             restL2SnapshotPath = "https://testnet.binance.vision/api/v1/depth";
         }
         super({
-            name: "binance",
+            name: "binance" as ExchangeId,
             restL2SnapshotPath,
             wssPath,
             useAggTrades,

@@ -4,6 +4,7 @@ import {
     LISTEN_KEY_RENEW_INTERVAL,
     LISTEN_KEY_RENEW_RETRY_INTERVAL,
 } from "./BinancePrivateBase";
+import { ExchangeId } from "../types";
 
 export class BinanceFuturesCoinmPrivateClient extends BinancePrivateBase {
     constructor({
@@ -27,7 +28,7 @@ export class BinanceFuturesCoinmPrivateClient extends BinancePrivateBase {
             restL2SnapshotPath = "https://testnet.binancefuture.com/api/v1/depth";
         }
         super({
-            name: "binancecoinm",
+            name: "binancecoinm" as ExchangeId,
             restL2SnapshotPath,
             wssPath,
             useAggTrades,

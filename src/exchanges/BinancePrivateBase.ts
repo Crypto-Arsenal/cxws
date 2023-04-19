@@ -40,12 +40,13 @@ import { Trade } from "../Trade";
 import { Market } from "../Market";
 import { Level2Update } from "../Level2Update";
 import * as https from "../Https";
-import ccxt, { ExchangeId } from "ccxt";
+import ccxt from "ccxt";
 import { PrivateClientOptions } from "../PrivateClientOptions";
 import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
 import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
 import { OrderEvent } from "../OrderEvent";
+import { ExchangeId } from "../types";
 const JSONbig = require("json-bigint");
 
 export const LISTEN_KEY_RENEW_INTERVAL = 1200000; // 1200s -> 20m
@@ -54,7 +55,7 @@ export const LIST_SUBSCRIPTION_PING_INTERVAL = 900000; // 900s -> 15m
 export const BINANCE_RECONNECT_INTERVAL = 82800000; // 82800s -> 23h
 
 export type BinancePrivateClientOptions = PrivateClientOptions & {
-    name?: ccxt.ExchangeId;
+    name?: ExchangeId;
     wssPath?: string;
     restL2SnapshotPath?: string;
     watcherMs?: number;
@@ -91,7 +92,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
     _reconnect24Interval: NodeJS.Timeout;
 
     constructor({
-        name = "binance",
+        name = "binance" as ExchangeId,
         wssPath,
         restL2SnapshotPath,
         watcherMs = 30000,
@@ -576,7 +577,7 @@ export class BinancePrivateBase extends BasicPrivateClient {
         } = msg;
         const open = parseFloat(last) + parseFloat(change);
         return new Ticker({
-            exchange: this.name,
+            exchange: this.name as string,
             base: market.base,
             quote: market.quote,
             timestamp: timestamp,

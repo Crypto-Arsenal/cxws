@@ -1,4 +1,5 @@
 import { BinancePrivateBase, BinancePrivateClientOptions } from "./BinancePrivateBase";
+import { ExchangeId } from "../types";
 
 export class BinanceUsPrivateClient extends BinancePrivateBase {
     constructor({
@@ -22,7 +23,7 @@ export class BinanceUsPrivateClient extends BinancePrivateBase {
             restL2SnapshotPath = "https://testnet.binance.vision/api/v1/depth";
         }
         super({
-            name: "binanceus",
+            name: "binanceus" as ExchangeId,
             restL2SnapshotPath,
             wssPath,
             useAggTrades,

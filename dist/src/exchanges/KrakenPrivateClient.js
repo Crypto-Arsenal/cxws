@@ -18,9 +18,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.KrakenPrivateClient = void 0;
 /* eslint-disable @typescript-eslint/member-ordering */
@@ -31,7 +28,7 @@ exports.KrakenPrivateClient = void 0;
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 const BasicPrivateClient_1 = require("../BasicPrivateClient");
 const https = __importStar(require("../Https"));
-const ccxt_1 = __importDefault(require("ccxt"));
+const ccxt_1 = require("ccxt");
 const OrderStatus_1 = require("../OrderStatus");
 /**
     Kraken's API documentation is availble at:
@@ -62,7 +59,7 @@ class KrakenPrivateClient extends BasicPrivateClient_1.BasicPrivateClient {
         this.debounceWait = 200;
         this.fromRestMap = new Map();
         this.fromWsMap = new Map();
-        this.ccxt = new ccxt_1.default.kraken({
+        this.ccxt = new ccxt_1.kraken({
             apiKey,
             secret: apiSecret,
         });

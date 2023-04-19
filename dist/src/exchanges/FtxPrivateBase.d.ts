@@ -1,5 +1,4 @@
 /// <reference types="node" />
-/// <reference types="ccxt" />
 import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
 export declare class FtxPrivateBaseClient extends BasicPrivateClient {
     protected _pingInterval: NodeJS.Timeout;
@@ -37,7 +36,7 @@ export declare class FtxPrivateBaseClient extends BasicPrivateClient {
     protected _orderbookUpdateEvent(data: any, market: any): void;
     protected _orderbookSnapshotEvent(data: any, market: any): void;
     protected _orderbookEventContent(data: any, market: any): {
-        exchange: import("ccxt").ExchangeId;
+        exchange: number | symbol | "length" | "toString" | "concat" | "indexOf" | "lastIndexOf" | "slice" | "includes" | "toLocaleString" | "join" | "every" | "some" | "forEach" | "map" | "filter" | "reduce" | "reduceRight" | "find" | "findIndex" | "entries" | "keys" | "values" | "flatMap" | "flat" | "pop" | "push" | "reverse" | "shift" | "sort" | "splice" | "unshift" | "fill" | "copyWithin";
         base: any;
         quote: any;
         timestampMs: number;

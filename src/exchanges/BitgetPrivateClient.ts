@@ -6,11 +6,9 @@
 import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
 import { stringify } from "querystring";
 import { createHmac } from "crypto";
-import { CancelableFn } from "../flowcontrol/Fn";
-import * as ccxt from "ccxt";
 import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
-import { InvestmentType } from "../types";
+import { InvestmentType, ExchangeId } from "../types";
 
 // TODO: send instIds from broker
 const SpotIds = [
@@ -43,7 +41,7 @@ export class BitgetPrivateClient extends BasicPrivateClient {
         apiKey,
         apiSecret,
         apiPassword,
-        name = "bitget" as ccxt.ExchangeId,
+        name = "bitget" as ExchangeId,
         // international
         wssPath = "wss://ws.bitget.com/spot/v1/stream",
     }) {

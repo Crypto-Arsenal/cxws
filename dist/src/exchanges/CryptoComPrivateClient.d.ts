@@ -1,10 +1,9 @@
 import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
-import * as ccxt from "ccxt";
 export declare class CryptoComPrivateClient extends BasicPrivateClient {
     constructor({ apiKey, apiSecret, name, wssPath, }: {
         apiKey: any;
         apiSecret: any;
-        name?: ccxt.ExchangeId;
+        name?: keyof string[];
         wssPath?: string;
     });
     /**

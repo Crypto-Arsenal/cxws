@@ -1,8 +1,8 @@
-import * as ccxt from "ccxt";
+import { ExchangeId } from "./types";
 import { OrderStatus } from "./OrderStatus";
 import { OrderEvent } from "./OrderEvent";
 export type Order = {
-    exchange: ccxt.ExchangeId;
+    exchange: ExchangeId;
     pair: string;
     exchangeOrderId: string;
     status: OrderStatus;

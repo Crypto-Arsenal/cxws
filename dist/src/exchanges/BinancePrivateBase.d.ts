@@ -7,15 +7,15 @@ import { Ticker } from "../Ticker";
 import { Trade } from "../Trade";
 import { Market } from "../Market";
 import { Level2Update } from "../Level2Update";
-import ccxt from "ccxt";
 import { PrivateClientOptions } from "../PrivateClientOptions";
 import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
+import { ExchangeId } from "../types";
 export declare const LISTEN_KEY_RENEW_INTERVAL = 1200000;
 export declare const LISTEN_KEY_RENEW_RETRY_INTERVAL = 30000;
 export declare const LIST_SUBSCRIPTION_PING_INTERVAL = 900000;
 export declare const BINANCE_RECONNECT_INTERVAL = 82800000;
 export declare type BinancePrivateClientOptions = PrivateClientOptions & {
-    name?: ccxt.ExchangeId;
+    name?: ExchangeId;
     wssPath?: string;
     restL2SnapshotPath?: string;
     watcherMs?: number;

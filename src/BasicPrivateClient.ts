@@ -3,8 +3,8 @@ import { EventEmitter } from "events";
 import { IPrivateClient } from "./IPrivateClient";
 import { SmartWss } from "./SmartWss";
 import { Watcher } from "./Watcher";
-import ccxt from "ccxt";
 import { InvestmentType } from "./types";
+import { ExchangeId } from "./types";
 
 export type PrivateChannelSubscription = {
     id: string;
@@ -28,7 +28,7 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
     public hasPrivateOrders: boolean;
     // for webhook key
     public apiToken: string;
-    public ccxt: ccxt.binance;
+    public ccxt: any;
 
     // public wssPath: string;
 
@@ -40,7 +40,7 @@ export abstract class BasicPrivateClient extends EventEmitter implements IPrivat
 
     constructor(
         readonly wssPath: string,
-        readonly name: ccxt.ExchangeId,
+        readonly name: ExchangeId,
         readonly apiKey: string,
         readonly apiSecret: string,
         readonly apiPassword: string = "",

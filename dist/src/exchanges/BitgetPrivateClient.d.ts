@@ -1,13 +1,12 @@
 /// <reference types="node" />
 import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
-import * as ccxt from "ccxt";
 export declare class BitgetPrivateClient extends BasicPrivateClient {
     protected _pingInterval: NodeJS.Timeout;
     constructor({ apiKey, apiSecret, apiPassword, name, wssPath, }: {
         apiKey: any;
         apiSecret: any;
         apiPassword: any;
-        name?: ccxt.ExchangeId;
+        name?: keyof string[];
         wssPath?: string;
     });
     protected _sendPong(ts: number): void;

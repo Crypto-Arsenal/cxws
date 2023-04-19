@@ -13,7 +13,7 @@ import { base64Encode, hmacSign } from "../Jwt";
 import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
 import { OrderEvent } from "../OrderEvent";
-import { InvestmentType } from "../types";
+import { InvestmentType, ExchangeId } from "../types";
 
 const pongBuffer = Buffer.from("pong");
 
@@ -61,7 +61,7 @@ export class OkexPrivateClient extends BasicPrivateClient {
         if (testNet) {
             wssPath = "wss://wspap.okx.com:8443/ws/v5/private?brokerId=9999";
         }
-        super(wssPath, "okex", apiKey, apiSecret, apiPassword, undefined, watcherMs);
+        super(wssPath, "okex" as ExchangeId, apiKey, apiSecret, apiPassword, undefined, watcherMs);
         this.hasPrivateOrders = true;
         this._sendMessage = throttle(this.__sendMessage.bind(this), sendThrottleMs);
     }

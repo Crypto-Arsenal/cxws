@@ -3,8 +3,8 @@ import { EventEmitter } from "events";
 import { IPrivateClient } from "./IPrivateClient";
 import { SmartWss } from "./SmartWss";
 import { Watcher } from "./Watcher";
-import ccxt from "ccxt";
 import { InvestmentType } from "./types";
+import { ExchangeId } from "./types";
 export declare type PrivateChannelSubscription = {
     id: string;
     name: string;
@@ -23,18 +23,18 @@ export declare type SendFn = (remoteId: string, channle_sub: PrivateChannelSubsc
  */
 export declare abstract class BasicPrivateClient extends EventEmitter implements IPrivateClient {
     readonly wssPath: string;
-    readonly name: ccxt.ExchangeId;
+    readonly name: ExchangeId;
     readonly apiKey: string;
     readonly apiSecret: string;
     readonly apiPassword: string;
     hasPrivateOrders: boolean;
     apiToken: string;
-    ccxt: ccxt.binance;
+    ccxt: any;
     protected _wssFactory: WssFactoryFn;
     protected _privateOrderSubs: PrivateChannelSubscriptionMap;
     protected _wss: SmartWss;
     protected _watcher: Watcher;
-    constructor(wssPath: string, name: ccxt.ExchangeId, apiKey: string, apiSecret: string, apiPassword?: string, wssFactory?: WssFactoryFn, watcherMs?: number);
+    constructor(wssPath: string, name: ExchangeId, apiKey: string, apiSecret: string, apiPassword?: string, wssFactory?: WssFactoryFn, watcherMs?: number);
     protected getWssPath(): string;
     close(): void;
     reconnect(): void;

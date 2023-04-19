@@ -10,10 +10,11 @@ import {
     PrivateChannelSubscriptionMap,
 } from "../BasicPrivateClient";
 import * as https from "../Https";
-import ccxt from "ccxt";
+import { kraken } from "ccxt";
 import { PrivateClientOptions } from "../PrivateClientOptions";
 import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
+import { ExchangeId } from "../types";
 
 export type KrakenClientOptions = PrivateClientOptions & {
     autoloadSymbolMaps?: boolean;
@@ -40,7 +41,7 @@ export type KrakenClientOptions = PrivateClientOptions & {
     determine the remoteIds to send to the server on all sub/unsub requests.
   */
 export class KrakenPrivateClient extends BasicPrivateClient {
-    public ccxt: ccxt.kraken;
+    public ccxt: kraken;
 
     public debounceWait: number;
 
@@ -56,7 +57,7 @@ export class KrakenPrivateClient extends BasicPrivateClient {
         apiKey = "",
         apiSecret = "",
     }: KrakenClientOptions = {}) {
-        super(wssPath, "kraken", apiKey, apiSecret, "", undefined, watcherMs);
+        super(wssPath, "kraken" as ExchangeId, apiKey, apiSecret, "", undefined, watcherMs);
 
         this.hasPrivateOrders = true;
 
@@ -67,7 +68,7 @@ export class KrakenPrivateClient extends BasicPrivateClient {
         this.fromRestMap = new Map();
         this.fromWsMap = new Map();
 
-        this.ccxt = new ccxt.kraken({
+        this.ccxt = new kraken({
             apiKey,
             secret: apiSecret,
         });
