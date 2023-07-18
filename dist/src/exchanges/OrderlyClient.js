@@ -42,11 +42,11 @@ const pongBuffer = Buffer.from("pong");
  * Refer to: https://www.okex.com/docs/en/#spot_ws-checksum
  */
 const KEYS = {
-    publicKey: "",
+    publicKey: "ed25519:Es2JQ7s9xmXRqTddasFFtCbtssjHAo6eg1kGfnYHZfzR",
     accountId: "19ebb9b345e1ba2eb9b3734e8633eaf46f7a4020627bae33de1f7f00f6090a37",
-    tradingPublic: "",
-    tradingSecret: "",
-    orderlyKeyPrivate: "",
+    tradingPublic: "1569edec043cc88171be4714afbd0b03a66e8b278d3801c2282827de2a8fba6c5ab800bb237ddc847fe7d6822bb470d11fcd13206c294c2f265399d4b577bfd3",
+    tradingSecret: "1ca8ceae272c6bb4e94d08e5d6681fe80fc1db7658f75c75e8d81ab23c3c18a3",
+    orderlyKeyPrivate: "ed25519:4kPFs2WH4ETFvFfc45JM1SDJeQQsJXnTdUr6PbXcdm7Yd1CZQaEA2y3KFfA77oeZhkP6uwCM3VV2ugdnEdQTgokm",
 };
 class OrderlyClient extends BasicClient_1.BasicClient {
     constructor({ wssPath = `wss://ws.orderly.org/ws/stream/${KEYS.accountId}`, watcherMs, sendThrottleMs = 20, } = {}) {

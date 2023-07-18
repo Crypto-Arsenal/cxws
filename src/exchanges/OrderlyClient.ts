@@ -46,11 +46,7 @@ export type OrderlyClientOptions = ClientOptions & {
  * Refer to: https://www.okex.com/docs/en/#spot_ws-checksum
  */
 const KEYS = {
-    publicKey: "",
     accountId: "19ebb9b345e1ba2eb9b3734e8633eaf46f7a4020627bae33de1f7f00f6090a37",
-    tradingPublic: "",
-    tradingSecret: "",
-    orderlyKeyPrivate: "",
 };
 
 type KlineType =
