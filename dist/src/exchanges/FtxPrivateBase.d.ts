@@ -36,7 +36,7 @@ export declare class FtxPrivateBaseClient extends BasicPrivateClient {
     protected _orderbookUpdateEvent(data: any, market: any): void;
     protected _orderbookSnapshotEvent(data: any, market: any): void;
     protected _orderbookEventContent(data: any, market: any): {
-        exchange: number | symbol | "length" | "toString" | "concat" | "indexOf" | "lastIndexOf" | "slice" | "includes" | "toLocaleString" | "join" | "every" | "some" | "forEach" | "map" | "filter" | "reduce" | "reduceRight" | "find" | "findIndex" | "entries" | "keys" | "values" | "flatMap" | "flat" | "pop" | "push" | "reverse" | "shift" | "sort" | "splice" | "unshift" | "fill" | "copyWithin";
+        exchange: number | symbol | "length" | "toString" | "toLocaleString" | "pop" | "push" | "concat" | "join" | "reverse" | "shift" | "slice" | "sort" | "splice" | "unshift" | "indexOf" | "lastIndexOf" | "every" | "some" | "forEach" | "map" | "filter" | "reduce" | "reduceRight" | "find" | "findIndex" | "fill" | "copyWithin" | "entries" | "keys" | "values" | "includes" | "flatMap" | "flat";
         base: any;
         quote: any;
         timestampMs: number;

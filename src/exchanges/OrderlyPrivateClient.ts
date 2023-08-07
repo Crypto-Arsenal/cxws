@@ -14,8 +14,101 @@ import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
 import { OrderEvent } from "../OrderEvent";
 import { InvestmentType, ExchangeId } from "../types";
+import { eddsa } from "ccxt/js/src/base/functions";
+import * as nacl from "tweetnacl";
+import * as elliptic from "elliptic";
+import * as crypto from "crypto";
+import * as ethUtil from "ethereumjs-util";
+import { ec as EC } from "elliptic";
+import keccak256 from "keccak256";
+import { KeyPair } from "near-api-js";
 
-const pongBuffer = Buffer.from("pong");
+export function getTradingKeyPair(tradingKeyPrivateKey: string) {
+    const ec = new EC("secp256k1");
+    const keyPair = ec.keyFromPrivate(tradingKeyPrivateKey);
+    return {
+        privateKey: keyPair.getPrivate().toString("hex"),
+        publicKey: keyPair.getPublic().encode("hex"),
+        keyPair,
+    };
+}
+
+export function getOrderlyKeyPair(orderlyKeyPrivateKey: string) {
+    console.log("private key", orderlyKeyPrivateKey);
+    return KeyPair.fromString(orderlyKeyPrivateKey);
+}
+
+function handleZero(str: string) {
+    if (str.length < 64) {
+        const zeroArr = new Array(64 - str.length).fill(0);
+        return zeroArr.join("") + str;
+    }
+    return str;
+}
+
+export function signMessageByTradingKey(keyPair: EC.KeyPair, params: any) {
+    const ec = new EC("secp256k1");
+    const msgHash = keccak256(params);
+    const privateKey = keyPair.getPrivate("hex");
+    const signature = ec.sign(msgHash, privateKey, "hex", { canonical: true });
+    const r = signature.r.toJSON();
+    const s = signature.s.toJSON();
+    const hexSignature = `${handleZero(r)}${handleZero(s)}0${signature.recoveryParam}`;
+    return hexSignature;
+}
+
+export function signPostRequestByOrderlyKey(keyPair: KeyPair, messageString: Uint8Array) {
+    const u8 = Buffer.from(messageString);
+    const signStr = keyPair.sign(u8);
+    return Buffer.from(signStr.signature).toString("base64");
+}
+
+export const generateGetHeaders = (method: string, urlParam: string, params: Record<string, any>, orderlyKeyPrivate: string, accountId: string, orderlyKey: string, includeQuery = false): Promise<any> => {
+  const timestamp = new Date().getTime().toString();
+  const messageStr = [
+    timestamp,
+    method.toUpperCase(),
+    includeQuery ? urlParam + "?" + new URLSearchParams(params).toString() : urlParam,
+    includeQuery ? "" : params && Object.keys(params).length ? JSON.stringify(params) : "",
+  ].join("");
+  const messageBytes = new TextEncoder().encode(messageStr);
+  const keyPair = getOrderlyKeyPair(orderlyKeyPrivate);
+  const orderlySign = signPostRequestByOrderlyKey(keyPair, messageBytes);
+  return Promise.resolve({
+    "Content-Type": " application/x-www-form-urlencoded",
+    "orderly-account-id": accountId,
+    "orderly-key": orderlyKey,
+    "orderly-signature": orderlySign,
+    "orderly-timestamp": timestamp,
+  });
+};
+
+const generatePostHeadersAndRequestData = (params, orderlyKeyPrivate, accountId, orderlyKey, tradingSecret, tradingPublic, includeQuery = false) =>  {
+    const objectKeys = Object.keys(params);
+        const orderMessage = Object.keys(params)
+            .sort()
+            .map(key => `${key}=${params[key]}`)
+            .join("&");
+        console.log(orderMessage);
+        const tradingKey = getTradingKeyPair(tradingSecret);
+        const sign = signMessageByTradingKey(tradingKey.keyPair, orderMessage);
+        const requestData = Object.assign(Object.assign({}, params), { signature: sign });
+        const timestamp = new Date().getTime().toString();
+        const messageStr = [
+            timestamp,
+        ].join("");
+        console.log(messageStr);
+        const messageBytes = new TextEncoder().encode(messageStr);
+        const keyPairSign =  getOrderlyKeyPair(orderlyKeyPrivate);
+        const orderlySign = signPostRequestByOrderlyKey(keyPairSign, messageBytes);
+        return {
+            "orderly_key": orderlyKey,
+            "sign": orderlySign,
+            "timestamp": Number(timestamp)
+        };
+    // }
+};
+
 
 export type OrderlyClientOptions = PrivateClientOptions & {
     sendThrottleMs?: number;
@@ -43,9 +136,6 @@ export type OrderlyClientOptions = PrivateClientOptions & {
  *
  * Refer to: https://www.okex.com/docs/en/#spot_ws-checksum
  */
-const KEYS = {
-    accountId: "19ebb9b345e1ba2eb9b3734e8633eaf46f7a4020627bae33de1f7f00f6090a37",
-};
 
 export class OrderlyPrivateClient extends BasicPrivateClient {
     public candlePeriod: CandlePeriod;
@@ -65,7 +155,7 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
         if (testNet) {
             wssPath = `wss://testnet-ws-private.orderly.org/v2/ws/private/stream/${KEYS.accountId}`;
         }
-        super(wssPath, "okex" as ExchangeId, apiKey, apiSecret, apiPassword, undefined, watcherMs);
+        super(wssPath, "orderly" as ExchangeId, apiKey, apiSecret, apiPassword, undefined, watcherMs);
         this.hasPrivateOrders = true;
         this._sendMessage = throttle(this.__sendMessage.bind(this), sendThrottleMs);
     }
@@ -76,7 +166,6 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
      * @param channel
      * @see https://www.okx.com/docs-v5/en/#websocket-api-private-channel-order-channel
      */
-    // TODO: https://docs-api.orderly.network/#websocket-api-private-execution-report
     protected _sendSubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription) {
         this._wss.send(
             JSON.stringify({
@@ -104,28 +193,17 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
         this._sendAuthentication();
     }
 
-    // TODO: SAM
-    // https://docs-api.orderly.network/#authentication
-    // https://docs-api.orderly.network/#websocket-api-auth
     protected _sendAuthentication() {
-        console.log("_sendAuthentication");
-        // const timestamp = "" + Date.now() / 1000;
-        // const sign = base64Encode(
-        //     hmacSign("sha256", this.apiSecret, timestamp + "GET" + "/users/self/verify"),
-        // );
-        // this._wss.send(
-        //     JSON.stringify({
-        //         op: "login",
-        //         args: [
-        //             {
-        //                 apiKey: this.apiKey,
-        //                 passphrase: this.apiPassword,
-        //                 timestamp,
-        //                 sign,
-        //             },
-        //         ],
-        //     }),
-        // );
+        console.log("_sendAuthetication");
+        const params = generatePostHeadersAndRequestData({}, KEYS.orderlyKeyPrivate, KEYS.accountId, KEYS.publicKey, KEYS.tradingSecret, KEYS.tradingPublic);
+    
+        this._wss.send(
+            JSON.stringify({
+                id: "123r333",
+                event: "auth",
+                params: params
+            })
+        );
     }
 
     protected _startPing() {
@@ -176,136 +254,91 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
         }
     }
 
-    protected _processsMessage(msg: any) {
-        console.log("msg", msg);
-
-        if (msg.event === "error") {
-            this.emit("error", msg);
-            return;
+     protected _sendPong() {
+        if (this._wss) {
+            this._wss.send(
+                JSON.stringify({
+                    event: "pong",
+                }),
+            );
         }
-
-        /**
-         * https://docs-api.orderly.network/#websocket-api-auth
-         * {
-    "id":"123r",
-    "event":"auth",
-    "success":true,
-    "ts":1621910107315
-}
-         */
-        if (msg.event === "auth" && msg.success) {
-            this.emit("login", msg);
-            super._onConnected();
-            return;
-        }
-        // clear semaphore on subscription event reply
-        if (msg.event === "subscribe") {
-            return;
-        }
-
-        // ignore unsubscribe
-        if (msg.event === "unsubscribe") {
-            return;
-        }
-
-        // prevent failed messages from
-        if (!msg.data) {
-            // eslint-disable-next-line no-console
-            console.warn("warn: failure response", JSON.stringify(msg));
-            return;
-        }
-
-        if (msg.arg.channel === "orders" || msg.arg.channel === "orders-algo") {
-            /**
-             * https://www.okx.com/docs-v5/en/#websocket-api-private-channel-order-channel
-             * @example
-    {
-        arg: { channel: 'orders', instType: 'SPOT', uid: '277380621964292096' },
-        data: [
-            {
-                accFillSz: '0',
-                amendResult: '',
-                avgPx: '0',
-                cTime: '1644399065370',
-                category: 'normal',
-                ccy: '',
-                clOrdId: '',
-                code: '0',
-                execType: '',
-                fee: '0',
-                feeCcy: 'SOL',
-                fillFee: '0',
-                fillFeeCcy: '',
-                fillNotionalUsd: '',
-                fillPx: '',
-                fillSz: '0',
-                fillTime: '',
-                instId: 'SOL-USDT',
-                instType: 'SPOT',
-                lever: '0',
-                msg: '',
-                notionalUsd: '0.20019800000000001',
-                ordId: '411574742792163328',
-                ordType: 'limit',
-                pnl: '0',
-                posSide: '',
-                px: '20',
-                rebate: '0',
-                rebateCcy: 'USDT',
-                reduceOnly: 'false',
-                reqId: '',
-                side: 'buy',
-                slOrdPx: '',
-                slTriggerPx: '',
-                slTriggerPxType: 'last',
-                source: '',
-                state: 'live', | canceled
-                sz: '0.01',
-                tag: '',
-                tdMode: 'cash',
-                tgtCcy: '',
-                tpOrdPx: '',
-                tpTriggerPx: '',
-                tpTriggerPxType: 'last',
-                tradeId: '',
-                uTime: '1644399065370'
-            }
-        ]
     }
-            */
-            for (const d of msg.data) {
-                let status = d.state;
+
+    protected _processsMessage(msg: any) {
+        console.log("_processsMessage", msg);
+        // clear semaphore on subscription event reply
+        if (!msg.event) {
+            return;
+        }
+
+        switch (msg.event) {
+            case "ping":
+                this._sendPong();
+                return;
+             case "pong":
+                return;
+            // { id: '123r333', event: 'auth', success: true, ts: 1691126241419 }
+            case "auth":
+                this.emit("login", msg);
+                super._onConnected();
+                return;
+            default:
+                return;
+        }
+
+        // order update
+        if (msg?.topic?.includes("executionreport")) {
+            if (msg.data) {
+                           // https://docs-api.orderly.network/#restful-api-private-get-order
+//             _processsMessage {
+//   topic: 'executionreport',
+//   ts: 1691126463207,
+//   data: {
+//     symbol: 'SPOT_NEAR_USDC',
+//     clientOrderId: '',
+//     orderId: 382138349,
+//     type: 'LIMIT',
+//     side: 'SELL',
+//     quantity: 16.21,
+//     price: 2,
+//     tradeId: 0,
+//     executedPrice: 0,
+//     executedQuantity: 0,
+//     fee: 0,
+//     feeAsset: 'USDC',
+//     totalExecutedQuantity: 0,
+//     avgPrice: 0,
+//     status: 'NEW', //     "status": "FILLED", // NEW / FILLED / PARTIAL_FILLED / CANCELLED
+//     reason: '',
+//     totalFee: 0,
+//     visible: 16.21,
+//     timestamp: 1691126463207,
+//     brokerId: 'woofi_dex',
+//     brokerName: 'WOOFi DEX',
+//     maker: false
+//   }
+// }            
+                const d = msg.data;
+                let status = d.status;
                 // map to our status
-                if (status === "open" || status === "live") {
+                if (status === "NEW") {
                     status = OrderStatus.NEW;
-                } else if (status === "partially_filled") {
+                } else if (status === "PARTIAL_FILLED") {
                     status = OrderStatus.PARTIALLY_FILLED;
-                } else if (status === "filled" || status === "closed") {
+                } else if (status === "FILLED") {
                     status = OrderStatus.FILLED;
-                } else if (
-                    status === "canceled" ||
-                    status === "cancelled" ||
-                    status === "expired" ||
-                    status === "order_failed"
-                ) {
+                } else if (status === "CANCELLED") {
                     status = OrderStatus.CANCELED;
-                } else if (msg.arg.channel === "orders-algo" && status === "effective") {
-                    const data = {
-                        oldId: d.algoId,
-                        newId: d.ordId,
-                    };
-                    console.log("onOrderIdChanged", data);
-                    this.emit("onOrderIdChanged", data);
-                    continue;
+                } else if (status === "REJECTED") {
+                    status = OrderStatus.REJECTED;
+                } else if (status === "EXPIRED") {
+                    status = OrderStatus.EXPIRED;
                 } else {
                     console.log(`not going to update with status ${status}`);
-                    continue;
+                    return;
                 }
 
-                let event = null;
-                if (d.category === "full_liquidation" || d.category == "partial_liquidation") {
-                    event = OrderEvent.LIQUIDATION;
-                }
+                const event = null;
 
                 const isSell = d.side.substring(0, 4).toLowerCase() == "sell";
                 const amount = Math.abs(Number(d.sz || 0));
@@ -314,21 +347,27 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
                 const change = {
                     exchange: this.name,
                     pair: d.instId,
-                    exchangeOrderId: d.ordId || d.algoId || d.clOrdId,
+                    exchangeOrderId: d.ordId || d.algoId || d.clOrdId, // orderId
                     status: status,
                     event: event,
                     msg: status,
                     price: price,
-                    amount: isSell ? -amount : amount,
-                    amountFilled: isSell ? -amountFilled : amountFilled,
+                    amount: isSell ? -amount : amount, // quantity
+                    amountFilled: isSell ? -amountFilled : amountFilled, // executedQuantity
                     // Negative number represents the user transaction fee charged by the platform.
                     // Positive number represents rebate.
-                    commissionAmount: -Number(d.fee || 0),
-                    commissionCurrency: d.feeCcy,
+                    commissionAmount: -Number(d.fee || 0), // fee
+                    commissionCurrency: d.feeCcy, // feeAsset
                 } as Order;
 
                 this.emit("orders", change);
+                return;
             }
+            
         }
+
+
+
+    
     }
 }

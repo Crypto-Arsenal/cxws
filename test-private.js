@@ -9,6 +9,9 @@ const market = {
     quote: "USDT", // standardized quote symbol for Tether
 };
 
+oc.on("error", console.error)
+
+
 oc.subscribePrivateOrders(market)
 // subscribe to trades
 // oc.sub(market);
