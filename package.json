@@ -25,7 +25,7 @@
   "repository": "alanwu4321/cxws",
   "dependencies": {
     "axios": "^0.25.0",
-    "ccxt": "3.0.71",
+    "ccxt": "4.0.55",
     "crc": "^3.8.0",
     "crypto": "^1.0.1",
     "crypto-js": "^4.1.1",
