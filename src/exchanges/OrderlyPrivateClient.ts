@@ -289,7 +289,7 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
         // order update
         if (msg?.topic?.includes("executionreport")) {
             if (msg.data) {
-                           // https://docs-api.orderly.network/#restful-api-private-get-order
+// https://docs-api.orderly.network/#restful-api-private-get-order
 //             _processsMessage {
 //   topic: 'executionreport',
 //   ts: 1691126463207,
@@ -346,8 +346,8 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
                 const price = Number(d.avgPx || 0) || Number(d.px || 0);
                 const change = {
                     exchange: this.name,
-                    pair: d.instId,
-                    exchangeOrderId: d.ordId || d.algoId || d.clOrdId, // orderId
+                    pair: d.symbol,
+                    exchangeOrderId: d.orderId, // orderId
                     status: status,
                     event: event,
                     msg: status,
@@ -357,7 +357,7 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
                     // Negative number represents the user transaction fee charged by the platform.
                     // Positive number represents rebate.
                     commissionAmount: -Number(d.fee || 0), // fee
-                    commissionCurrency: d.feeCcy, // feeAsset
+                    commissionCurrency: d.feeAsset, // feeAsset
                 } as Order;
 
                 this.emit("orders", change);
