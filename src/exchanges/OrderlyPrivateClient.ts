@@ -341,9 +341,9 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
                 const event = null;
 
                 const isSell = d.side.substring(0, 4).toLowerCase() == "sell";
-                const amount = Math.abs(Number(d.sz || 0));
-                const amountFilled = Math.abs(Number(d.accFillSz || 0));
-                const price = Number(d.avgPx || 0) || Number(d.px || 0);
+                const amount = Math.abs(Number(d.quantity || 0));
+                const amountFilled = Math.abs(Number(d.executedQuantity || 0));
+                const price = Number(d.avgPrice || 0) || Number(d.price || 0);
                 const change = {
                     exchange: this.name,
                     pair: d.symbol,
