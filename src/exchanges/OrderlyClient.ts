@@ -17,33 +17,14 @@ import { Market } from "../Market";
 import { NotImplementedFn } from "../NotImplementedFn";
 import { Ticker } from "../Ticker";
 import { Trade } from "../Trade";
-import * as zlib from "../ZlibUtils";
-
-const pongBuffer = Buffer.from("pong");
 
 export type OrderlyClientOptions = ClientOptions & {
     sendThrottleMs?: number;
 };
 
 /**
- * Implements OKEx V3 WebSocket API as defined in
- * https://www.okex.com/docs/en/#spot_ws-general
- *
- * Limits:
- *    1 connection / second
- *    240 subscriptions / hour
- *
- * Connection will disconnect after 30 seconds of silence
- * it is recommended to send a ping message that contains the
- * message "ping".
- *
- * Order book depth includes maintenance of a checksum for the
- * first 25 values in the orderbook. Each update includes a crc32
- * checksum that can be run to validate that your order book
- * matches the server. If the order book does not match you should
- * issue a reconnect.
- *
- * Refer to: https://www.okex.com/docs/en/#spot_ws-checksum
+ * Implements Orderly Network WebSocket API as defined in
+ * https://docs-api.orderly.network/#websocket-api
  */
 
 type KlineType =
@@ -289,25 +270,6 @@ export class OrderlyClient extends BasicClient {
         } catch (ex) {
             this.emit("error", ex);
         }
-        // zlib.inflateRaw(compressed, (err, raw) => {
-        //     if (err) {
-        //         this.emit("error", err);
-        //         return;
-        //     }
-
-        //     // ignore pongs
-        //     if (raw.equals(pongBuffer)) {
-        //         return;
-        //     }
-
-        //     // process JSON message
-        //     try {
-        //         const msg = JSON.parse(raw.toString());
-        //         this._processsMessage(msg);
-        //     } catch (ex) {
-        //         this.emit("error", ex);
-        //     }
-        // });
     }
 
     protected _processsMessage(msg: any) {
@@ -338,18 +300,6 @@ export class OrderlyClient extends BasicClient {
             }
             return;
         }
-
-        // // l2 snapshots
-        // if (msg.table.match(/depth5/)) {
-        //     this._processLevel2Snapshot(msg);
-        //     return;
-        // }
-
-        // // l2 updates
-        // if (msg.table.match(/depth/)) {
-        //     this._processLevel2Update(msg);
-        //     return;
-        // }
     }
 
     /**
@@ -429,16 +379,6 @@ export class OrderlyClient extends BasicClient {
             data: { symbol },
         } = msg;
         this.emit("candle", data, symbol);
-        // for (const datum of msg.data) {
-        //     // ensure market
-        //     const remoteId = datum.instrument_id;
-        //     const market = this._candleSubs.get(remoteId);
-        //     if (!market) continue;
-
-        //     // construct and emit candle
-        //     const candle = this._constructCandle(datum);
-        //     this.emit("candle", candle, market);
-        // }
     }
 
     /**

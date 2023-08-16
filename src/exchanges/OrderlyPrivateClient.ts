@@ -3,22 +3,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-implied-eval */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
+import { BasicPrivateClient } from "../BasicPrivateClient";
 import { CandlePeriod } from "../CandlePeriod";
 import { CancelableFn } from "../flowcontrol/Fn";
 import { throttle } from "../flowcontrol/Throttle";
 import { Market } from "../Market";
 import { PrivateClientOptions } from "../PrivateClientOptions";
-import { base64Encode, hmacSign } from "../Jwt";
 import { OrderStatus } from "../OrderStatus";
 import { Order } from "../Order";
-import { OrderEvent } from "../OrderEvent";
-import { InvestmentType, ExchangeId } from "../types";
-import { eddsa } from "ccxt/js/src/base/functions";
-import * as nacl from "tweetnacl";
-import * as elliptic from "elliptic";
-import * as crypto from "crypto";
-import * as ethUtil from "ethereumjs-util";
+import { ExchangeId } from "../types";
 import { ec as EC } from "elliptic";
 import keccak256 from "keccak256";
 import { KeyPair } from "near-api-js";
@@ -116,25 +109,9 @@ export type OrderlyClientOptions = PrivateClientOptions & {
 };
 
 /**
- * Implements OKEx V3 WebSocket API as defined in
- * https://www.okex.com/docs/en/#spot_ws-general
- * https://www.okx.com/docs-v5/en/#websocket-api-private-channel-order-channel
- *
- * Limits:
- *    1 connection / second
- *    240 subscriptions / hour
- *
- * Connection will disconnect after 30 seconds of silence
- * it is recommended to send a ping message that contains the
- * message "ping".
- *
- * Order book depth includes maintenance of a checksum for the
- * first 25 values in the orderbook. Each update includes a crc32
- * checksum that can be run to validate that your order book
- * matches the server. If the order book does not match you should
- * issue a reconnect.
- *
- * Refer to: https://www.okex.com/docs/en/#spot_ws-checksum
+ * Implements Orderly Network WebSocket API as defined in
+ * https://docs-api.orderly.network/#introduction
+ * https://docs-api.orderly.network/#websocket-api
  */
 
 export class OrderlyPrivateClient extends BasicPrivateClient {
@@ -161,12 +138,9 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
     }
 
     /**
-     *
-     * @param subscriptionId
-     * @param channel
-     * @see https://www.okx.com/docs-v5/en/#websocket-api-private-channel-order-channel
+     * @see https://docs-api.orderly.network/#websocket-api-private-execution-report
      */
-    protected _sendSubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription) {
+    protected _sendSubPrivateOrders() {
         this._wss.send(
             JSON.stringify({
                 id: "clientID3",
@@ -175,7 +149,7 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
             }),
         );
     }
-    protected _sendUnsubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription) {
+    protected _sendUnsubPrivateOrders() {
         throw new Error("Method not implemented.");
     }
 
@@ -289,35 +263,7 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
         // order update
         if (msg?.topic?.includes("executionreport")) {
             if (msg.data) {
-// https://docs-api.orderly.network/#restful-api-private-get-order
-//             _processsMessage {
-//   topic: 'executionreport',
-//   ts: 1691126463207,
-//   data: {
-//     symbol: 'SPOT_NEAR_USDC',
-//     clientOrderId: '',
-//     orderId: 382138349,
-//     type: 'LIMIT',
-//     side: 'SELL',
-//     quantity: 16.21,
-//     price: 2,
-//     tradeId: 0,
-//     executedPrice: 0,
-//     executedQuantity: 0,
-//     fee: 0,
-//     feeAsset: 'USDC',
-//     totalExecutedQuantity: 0,
-//     avgPrice: 0,
-//     status: 'NEW', //     "status": "FILLED", // NEW / FILLED / PARTIAL_FILLED / CANCELLED
-//     reason: '',
-//     totalFee: 0,
-//     visible: 16.21,
-//     timestamp: 1691126463207,
-//     brokerId: 'woofi_dex',
-//     brokerName: 'WOOFi DEX',
-//     maker: false
-//   }
-// }            
+                // https://docs-api.orderly.network/#restful-api-private-get-order           
                 const d = msg.data;
                 let status = d.status;
                 // map to our status
