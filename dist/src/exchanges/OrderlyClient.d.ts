@@ -12,6 +12,10 @@ import { Trade } from "../Trade";
 export declare type OrderlyClientOptions = ClientOptions & {
     sendThrottleMs?: number;
 };
+/**
+ * Implements Orderly Network WebSocket API as defined in
+ * https://docs-api.orderly.network/#websocket-api
+ */
 declare type KlineType = "1m" | "5m" | "15m" | "30m" | "1h" | "2h" | "4h" | "6h" | "12h" | "1d" | "3d" | "1w" | "2w";
 interface IKlineObject {
     topic: string;
@@ -33,7 +37,7 @@ export declare class OrderlyClient extends BasicClient {
     candlePeriod: CandlePeriod;
     protected _sendMessage: CancelableFn;
     protected _pingInterval: NodeJS.Timeout;
-    constructor({ wssPath, watcherMs, sendThrottleMs, }?: OrderlyClientOptions);
+    constructor({ sendThrottleMs }?: any);
     protected _beforeClose(): void;
     protected _beforeConnect(): void;
     protected _startPing(): void;

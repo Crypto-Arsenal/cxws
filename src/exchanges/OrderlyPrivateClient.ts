@@ -56,52 +56,65 @@ export function signPostRequestByOrderlyKey(keyPair: KeyPair, messageString: Uin
     return Buffer.from(signStr.signature).toString("base64");
 }
 
-export const generateGetHeaders = (method: string, urlParam: string, params: Record<string, any>, orderlyKeyPrivate: string, accountId: string, orderlyKey: string, includeQuery = false): Promise<any> => {
-  const timestamp = new Date().getTime().toString();
-  const messageStr = [
-    timestamp,
-    method.toUpperCase(),
-    includeQuery ? urlParam + "?" + new URLSearchParams(params).toString() : urlParam,
-    includeQuery ? "" : params && Object.keys(params).length ? JSON.stringify(params) : "",
-  ].join("");
-  const messageBytes = new TextEncoder().encode(messageStr);
-  const keyPair = getOrderlyKeyPair(orderlyKeyPrivate);
-  const orderlySign = signPostRequestByOrderlyKey(keyPair, messageBytes);
-  return Promise.resolve({
-    "Content-Type": " application/x-www-form-urlencoded",
-    "orderly-account-id": accountId,
-    "orderly-key": orderlyKey,
-    "orderly-signature": orderlySign,
-    "orderly-timestamp": timestamp,
-  });
+export const generateGetHeaders = (
+    method: string,
+    urlParam: string,
+    params: Record<string, any>,
+    orderlyKeyPrivate: string,
+    accountId: string,
+    orderlyKey: string,
+    includeQuery = false,
+): Promise<any> => {
+    const timestamp = new Date().getTime().toString();
+    const messageStr = [
+        timestamp,
+        method.toUpperCase(),
+        includeQuery ? urlParam + "?" + new URLSearchParams(params).toString() : urlParam,
+        includeQuery ? "" : params && Object.keys(params).length ? JSON.stringify(params) : "",
+    ].join("");
+    const messageBytes = new TextEncoder().encode(messageStr);
+    const keyPair = getOrderlyKeyPair(orderlyKeyPrivate);
+    const orderlySign = signPostRequestByOrderlyKey(keyPair, messageBytes);
+    return Promise.resolve({
+        "Content-Type": " application/x-www-form-urlencoded",
+        "orderly-account-id": accountId,
+        "orderly-key": orderlyKey,
+        "orderly-signature": orderlySign,
+        "orderly-timestamp": timestamp,
+    });
 };
 
-const generatePostHeadersAndRequestData = (params, orderlyKeyPrivate, accountId, orderlyKey, tradingSecret, tradingPublic, includeQuery = false) =>  {
+const generatePostHeadersAndRequestData = (
+    params,
+    orderlyKeyPrivate,
+    accountId,
+    orderlyKey,
+    tradingSecret,
+    tradingPublic,
+    includeQuery = false,
+) => {
     const objectKeys = Object.keys(params);
-        const orderMessage = Object.keys(params)
-            .sort()
-            .map(key => `${key}=${params[key]}`)
-            .join("&");
-        console.log(orderMessage);
-        const tradingKey = getTradingKeyPair(tradingSecret);
-        const sign = signMessageByTradingKey(tradingKey.keyPair, orderMessage);
-        const requestData = Object.assign(Object.assign({}, params), { signature: sign });
-        const timestamp = new Date().getTime().toString();
-        const messageStr = [
-            timestamp,
-        ].join("");
-        console.log(messageStr);
-        const messageBytes = new TextEncoder().encode(messageStr);
-        const keyPairSign =  getOrderlyKeyPair(orderlyKeyPrivate);
-        const orderlySign = signPostRequestByOrderlyKey(keyPairSign, messageBytes);
-        return {
-            "orderly_key": orderlyKey,
-            "sign": orderlySign,
-            "timestamp": Number(timestamp)
-        };
+    const orderMessage = Object.keys(params)
+        .sort()
+        .map(key => `${key}=${params[key]}`)
+        .join("&");
+    console.log(orderMessage);
+    const tradingKey = getTradingKeyPair(tradingSecret);
+    const sign = signMessageByTradingKey(tradingKey.keyPair, orderMessage);
+    const requestData = Object.assign(Object.assign({}, params), { signature: sign });
+    const timestamp = new Date().getTime().toString();
+    const messageStr = [timestamp].join("");
+    console.log(messageStr);
+    const messageBytes = new TextEncoder().encode(messageStr);
+    const keyPairSign = getOrderlyKeyPair(orderlyKeyPrivate);
+    const orderlySign = signPostRequestByOrderlyKey(keyPairSign, messageBytes);
+    return {
+        orderly_key: orderlyKey,
+        sign: orderlySign,
+        timestamp: Number(timestamp),
+    };
     // }
 };
-
 
 export type OrderlyClientOptions = PrivateClientOptions & {
     sendThrottleMs?: number;
@@ -119,20 +132,15 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
 
     protected _sendMessage: CancelableFn;
     protected _pingInterval: NodeJS.Timeout;
+    credentials: any;
 
-    constructor({
-        wssPath = `wss://ws-private.orderly.org/v2/ws/private/stream/${KEYS.accountId}`,
-        watcherMs,
-        apiKey,
-        apiSecret,
-        apiPassword,
-        sendThrottleMs = 20,
-        testNet = false,
-    }: OrderlyClientOptions = {}) {
+    constructor({ credentials, sendThrottleMs = 20, testNet = false }: any = {}) {
+        let wssPath = `wss://ws-private.orderly.org/v2/ws/private/stream/${credentials.accountId}`;
         if (testNet) {
-            wssPath = `wss://testnet-ws-private.orderly.org/v2/ws/private/stream/${KEYS.accountId}`;
+            wssPath = `wss://testnet-ws-private.orderly.org/v2/ws/private/stream/${credentials.accountId}`;
         }
-        super(wssPath, "orderly" as ExchangeId, apiKey, apiSecret, apiPassword, undefined, watcherMs);
+        super(wssPath, "orderly" as ExchangeId, "", "", "", undefined, 20);
+        this.credentials = credentials;
         this.hasPrivateOrders = true;
         this._sendMessage = throttle(this.__sendMessage.bind(this), sendThrottleMs);
     }
@@ -169,14 +177,21 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
 
     protected _sendAuthentication() {
         console.log("_sendAuthetication");
-        const params = generatePostHeadersAndRequestData({}, KEYS.orderlyKeyPrivate, KEYS.accountId, KEYS.publicKey, KEYS.tradingSecret, KEYS.tradingPublic);
-    
+        const params = generatePostHeadersAndRequestData(
+            {},
+            this.credentials.orderlyKeyPrivate,
+            this.credentials.accountId,
+            this.credentials.publicKey,
+            this.credentials.tradingSecret,
+            this.credentials.tradingPublic,
+        );
+
         this._wss.send(
             JSON.stringify({
                 id: "123r333",
                 event: "auth",
-                params: params
-            })
+                params: params,
+            }),
         );
     }
 
@@ -228,7 +243,7 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
         }
     }
 
-     protected _sendPong() {
+    protected _sendPong() {
         if (this._wss) {
             this._wss.send(
                 JSON.stringify({
@@ -249,7 +264,7 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
             case "ping":
                 this._sendPong();
                 return;
-             case "pong":
+            case "pong":
                 return;
             // { id: '123r333', event: 'auth', success: true, ts: 1691126241419 }
             case "auth":
@@ -263,7 +278,7 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
         // order update
         if (msg?.topic?.includes("executionreport")) {
             if (msg.data) {
-                // https://docs-api.orderly.network/#restful-api-private-get-order           
+                // https://docs-api.orderly.network/#restful-api-private-get-order
                 const d = msg.data;
                 let status = d.status;
                 // map to our status
@@ -309,11 +324,6 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
                 this.emit("orders", change);
                 return;
             }
-            
         }
-
-
-
-    
     }
 }

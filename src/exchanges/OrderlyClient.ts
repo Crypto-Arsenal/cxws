@@ -65,12 +65,13 @@ export class OrderlyClient extends BasicClient {
     protected _sendMessage: CancelableFn;
     protected _pingInterval: NodeJS.Timeout;
 
-    constructor({
-        wssPath = `wss://ws.orderly.org/ws/stream/${KEYS.accountId}`,
-        watcherMs,
-        sendThrottleMs = 20,
-    }: OrderlyClientOptions = {}) {
-        super(wssPath, "orderly", undefined, watcherMs);
+    constructor({ sendThrottleMs = 20 }: any = {}) {
+        super(
+            `wss://ws.orderly.org/ws/stream/bf6eb263984c964a0cda3e9a35aa486268eea085d9b90fe792c8f9ad7e129a2c`,
+            "orderly",
+            undefined,
+            20,
+        );
         this.candlePeriod = CandlePeriod._1m;
         this.hasTickers = false;
         this.hasTrades = false;

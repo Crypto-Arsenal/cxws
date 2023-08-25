@@ -20,31 +20,9 @@ const Level2Update_1 = require("../Level2Update");
 const NotImplementedFn_1 = require("../NotImplementedFn");
 const Ticker_1 = require("../Ticker");
 const Trade_1 = require("../Trade");
-const pongBuffer = Buffer.from("pong");
-/**
- * Implements OKEx V3 WebSocket API as defined in
- * https://www.okex.com/docs/en/#spot_ws-general
- *
- * Limits:
- *    1 connection / second
- *    240 subscriptions / hour
- *
- * Connection will disconnect after 30 seconds of silence
- * it is recommended to send a ping message that contains the
- * message "ping".
- *
- * Order book depth includes maintenance of a checksum for the
- * first 25 values in the orderbook. Each update includes a crc32
- * checksum that can be run to validate that your order book
- * matches the server. If the order book does not match you should
- * issue a reconnect.
- *
- * Refer to: https://www.okex.com/docs/en/#spot_ws-checksum
- */
-
 class OrderlyClient extends BasicClient_1.BasicClient {
-    constructor({ wssPath = `wss://ws.orderly.org/ws/stream/${KEYS.accountId}`, watcherMs, sendThrottleMs = 20, } = {}) {
-        super(wssPath, "orderly", undefined, watcherMs);
+    constructor({ sendThrottleMs = 20 } = {}) {
+        super(`wss://ws.orderly.org/ws/stream/bf6eb263984c964a0cda3e9a35aa486268eea085d9b90fe792c8f9ad7e129a2c`, "orderly", undefined, 20);
         this._sendSubLevel3Snapshots = NotImplementedFn_1.NotImplementedFn;
         this._sendUnsubLevel3Snapshots = NotImplementedFn_1.NotImplementedFn;
         this._sendSubLevel3Updates = NotImplementedFn_1.NotImplementedFn;
@@ -200,23 +178,6 @@ class OrderlyClient extends BasicClient_1.BasicClient {
         catch (ex) {
             this.emit("error", ex);
         }
-        // zlib.inflateRaw(compressed, (err, raw) => {
-        //     if (err) {
-        //         this.emit("error", err);
-        //         return;
-        //     }
-        //     // ignore pongs
-        //     if (raw.equals(pongBuffer)) {
-        //         return;
-        //     }
-        //     // process JSON message
-        //     try {
-        //         const msg = JSON.parse(raw.toString());
-        //         this._processsMessage(msg);
-        //     } catch (ex) {
-        //         this.emit("error", ex);
-        //     }
-        // });
     }
     _processsMessage(msg) {
         console.log("_processsMessage", msg);
@@ -242,16 +203,6 @@ class OrderlyClient extends BasicClient_1.BasicClient {
             }
             return;
         }
-        // // l2 snapshots
-        // if (msg.table.match(/depth5/)) {
-        //     this._processLevel2Snapshot(msg);
-        //     return;
-        // }
-        // // l2 updates
-        // if (msg.table.match(/depth/)) {
-        //     this._processLevel2Update(msg);
-        //     return;
-        // }
     }
     /**
    * Process ticker messages in the format
@@ -325,15 +276,6 @@ class OrderlyClient extends BasicClient_1.BasicClient {
     _processCandles(msg) {
         const { data, data: { symbol }, } = msg;
         this.emit("candle", data, symbol);
-        // for (const datum of msg.data) {
-        //     // ensure market
-        //     const remoteId = datum.instrument_id;
-        //     const market = this._candleSubs.get(remoteId);
-        //     if (!market) continue;
-        //     // construct and emit candle
-        //     const candle = this._constructCandle(datum);
-        //     this.emit("candle", candle, market);
-        // }
     }
     /**
    * Processes a level 2 snapshot message in the format:

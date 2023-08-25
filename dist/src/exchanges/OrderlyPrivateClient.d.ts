@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { BasicPrivateClient, PrivateChannelSubscription } from "../BasicPrivateClient";
+import { BasicPrivateClient } from "../BasicPrivateClient";
 import { CandlePeriod } from "../CandlePeriod";
 import { CancelableFn } from "../flowcontrol/Fn";
 import { Market } from "../Market";
@@ -19,24 +19,25 @@ export declare type OrderlyClientOptions = PrivateClientOptions & {
     sendThrottleMs?: number;
     testNet?: boolean;
 };
+/**
+ * Implements Orderly Network WebSocket API as defined in
+ * https://docs-api.orderly.network/#introduction
+ * https://docs-api.orderly.network/#websocket-api
+ */
 export declare class OrderlyPrivateClient extends BasicPrivateClient {
     candlePeriod: CandlePeriod;
     protected _sendMessage: CancelableFn;
     protected _pingInterval: NodeJS.Timeout;
-    constructor({ wssPath, watcherMs, apiKey, apiSecret, apiPassword, sendThrottleMs, testNet, }?: OrderlyClientOptions);
+    credentials: any;
+    constructor({ credentials, sendThrottleMs, testNet }?: any);
     /**
-     *
-     * @param subscriptionId
-     * @param channel
-     * @see https://www.okx.com/docs-v5/en/#websocket-api-private-channel-order-channel
+     * @see https://docs-api.orderly.network/#websocket-api-private-execution-report
      */
-    protected _sendSubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription): void;
-    protected _sendUnsubPrivateOrders(subscriptionId: string, channel: PrivateChannelSubscription): void;
+    protected _sendSubPrivateOrders(): void;
+    protected _sendUnsubPrivateOrders(): void;
     protected _beforeClose(): void;
     protected _beforeConnect(): void;
     protected _onConnected(): void;
-    protected _normalizeContent(requestBody: any): string;
-    protected _generateSignature(privateKey: string, message: string): string;
     protected _sendAuthentication(): void;
     protected _startPing(): void;
     protected _stopPing(): void;
