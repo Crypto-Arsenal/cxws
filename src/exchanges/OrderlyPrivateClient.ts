@@ -256,23 +256,25 @@ export class OrderlyPrivateClient extends BasicPrivateClient {
     protected _processsMessage(msg: any) {
         console.log("_processsMessage", msg);
         // clear semaphore on subscription event reply
-        if (!msg.event) {
+        if (!msg) {
             return;
         }
 
-        switch (msg.event) {
-            case "ping":
-                this._sendPong();
-                return;
-            case "pong":
-                return;
-            // { id: '123r333', event: 'auth', success: true, ts: 1691126241419 }
-            case "auth":
-                this.emit("login", msg);
-                super._onConnected();
-                return;
-            default:
-                return;
+        if(msg?.event){
+            switch (msg.event) {
+                case "ping":
+                    this._sendPong();
+                    return;
+                case "pong":
+                    return;
+                // { id: '123r333', event: 'auth', success: true, ts: 1691126241419 }
+                case "auth":
+                    this.emit("login", msg);
+                    super._onConnected();
+                    return;
+                default:
+                    return;
+            }
         }
 
         // order update
